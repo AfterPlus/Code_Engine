@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LeetCode Visualizer</title>
+  <meta name="description" content="Paste a LeetCode problem, your solution, and a test case — then step through a visual dry run generated from the real execution.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%237c9cff'/%3E%3Cpath d='M9 22V10l7 6-7 6zm8 0V10h6' stroke='%23fff' stroke-width='2.5' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/editor.css">
+  <link rel="stylesheet" href="css/visualizer.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">LeetCode Visualizer</span>
+    </div>
+    <div class="topbar-group">
+      <label class="select-wrap" title="Load an example problem">
+        <span class="sr-only">Examples</span>
+        <select id="examples"></select>
+      </label>
+      <div class="segmented" id="language" role="radiogroup" aria-label="Language">
+        <button type="button" role="radio" data-lang="java">Java</button>
+        <button type="button" role="radio" data-lang="javascript">JavaScript</button>
+      </div>
+    </div>
+    <div class="topbar-spacer"></div>
+    <span class="status-pill" id="status" hidden></span>
+    <button type="button" class="btn btn-primary" id="run" title="Run selected test case (Ctrl+Enter)">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>
+      <span>Run</span>
+    </button>
+    <div class="settings-wrap">
+      <button type="button" class="btn btn-icon" id="settings-toggle" aria-haspopup="true" aria-expanded="false" title="Settings">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M11.3 1.5l.4 2.1c.6.2 1.1.5 1.6.9l2-.8 1.3 2.3-1.6 1.4c.1.6.1 1.2 0 1.8l1.6 1.4-1.3 2.3-2-.8c-.5.4-1 .7-1.6.9l-.4 2.1H8.7l-.4-2.1c-.6-.2-1.1-.5-1.6-.9l-2 .8-1.3-2.3L5 10.1a5 5 0 010-1.8L3.4 6.9l1.3-2.3 2 .8c.5-.4 1-.7 1.6-.9l.4-2.1h2.6zM10 7a3 3 0 100 6 3 3 0 000-6z"/></svg>
+      </button>
+      <div class="popover" id="settings" hidden>
+        <label class="field">
+          <span>Theme</span>
+          <select id="set-theme">
+            <option value="system">System</option>
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Max steps</span>
+          <input id="set-steps" type="number" min="50" max="5000" step="50">
+        </label>
+        <label class="field">
+          <span>Java backend</span>
+          <input id="set-backend" type="text" placeholder="same origin" spellcheck="false">
+        </label>
+        <p class="field-hint">JavaScript runs in your browser. Java is traced by the Spring Boot backend.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="workspace" id="workspace">
+    <section class="left" id="left">
+      <div class="card problem" id="problem-card">
+        <button type="button" class="card-head card-toggle" id="problem-toggle" aria-expanded="true">
+          <span class="chev" aria-hidden="true"></span>
+          <h2>Problem</h2>
+        </button>
+        <textarea id="problem" class="problem-text" spellcheck="false" placeholder="Paste the problem statement, constraints and examples…"></textarea>
+      </div>
+
+      <div class="card editor-card">
+        <div class="card-head">
+          <h2>Solution</h2>
+          <span class="card-sub" id="editor-lang"></span>
+          <div class="card-actions">
+            <button type="button" class="btn btn-ghost btn-sm" id="reset-code" title="Restore the example's code">Reset</button>
+          </div>
+        </div>
+        <div class="editor-host" id="editor"></div>
+      </div>
+
+      <div class="card tests" id="tests"></div>
+    </section>
+
+    <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" tabindex="0" title="Drag to resize"></div>
+
+    <section class="right" id="right">
+      <div class="stepbar" id="stepbar"></div>
+      <div class="stage" id="stage"></div>
+      <div class="dock" id="dock"></div>
+    </section>
+  </main>
+
+  <footer class="player" id="player"></footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/loader.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

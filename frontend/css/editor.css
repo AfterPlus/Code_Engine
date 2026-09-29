@@ -1,0 +1,74 @@
+/* ---------------------------------------------------------------- problem */
+.problem { flex: 0 0 auto; }
+.problem-text {
+  resize: vertical;
+  min-height: 70px; height: 110px; max-height: 40vh;
+  border: 0; outline: none; background: transparent;
+  padding: 10px 12px; color: var(--text-2); font-size: 13px; line-height: 1.5;
+}
+.problem.collapsed .problem-text { display: none; }
+
+/* ---------------------------------------------------------------- editor */
+.editor-card { flex: 1 1 auto; min-height: 220px; }
+.editor-host { flex: 1; min-height: 0; position: relative; border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; }
+
+/* Monaco decorations: the line about to run, and the line that just ran */
+.lcv-line-next { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.lcv-line-prev { background: rgba(127, 136, 155, 0.08); }
+.lcv-line-error { background: var(--err-soft); box-shadow: inset 3px 0 0 var(--err); }
+.lcv-glyph-next::before { content: '▶'; color: var(--accent); font-size: 11px; padding-left: 4px; }
+.lcv-glyph-prev::before { content: '●'; color: var(--muted); font-size: 8px; padding-left: 6px; }
+.lcv-glyph-error::before { content: '✕'; color: var(--err); font-size: 11px; padding-left: 4px; }
+.lcv-inline-value { color: var(--muted) !important; font-style: italic; margin-left: 1.5em; }
+.lcv-stale-banner {
+  position: absolute; right: 10px; top: 8px; z-index: 5;
+  font-size: 11.5px; background: var(--panel-3); color: var(--muted);
+  border: 1px solid var(--border); border-radius: 999px; padding: 2px 10px;
+}
+
+/* fallback editor when the Monaco CDN is unreachable */
+.fallback-editor { display: grid; grid-template-columns: auto 1fr; height: 100%; overflow: auto; font: 13px/20px var(--mono); }
+.fallback-gutter { padding: 8px 8px 8px 12px; text-align: right; color: var(--muted); user-select: none; background: var(--panel-2); }
+.fallback-gutter div.next { color: var(--accent); font-weight: 600; }
+.fallback-gutter div.prev { color: var(--text-2); }
+.fallback-text {
+  border: 0; outline: none; resize: none; background: transparent; color: var(--text);
+  padding: 8px 12px; font: inherit; white-space: pre; overflow: hidden; min-height: 100%;
+}
+
+/* ---------------------------------------------------------------- test cases */
+.tests { flex: 0 0 auto; max-height: 42%; }
+.tests .card-head { gap: 6px; }
+.case-tabs { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.case-tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid transparent; background: transparent; border-radius: 6px;
+  padding: 3px 9px; font-size: 12.5px; cursor: pointer; color: var(--muted);
+}
+.case-tab:hover { background: var(--panel-3); color: var(--text); }
+.case-tab[aria-selected="true"] { background: var(--panel-3); border-color: var(--border); color: var(--text); }
+.case-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-strong); }
+.case-dot.pass { background: var(--ret); }
+.case-dot.fail { background: var(--err); }
+.case-body { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px 12px 12px; overflow: auto; }
+.case-field { display: grid; gap: 4px; min-width: 0; }
+.case-field label { font-size: 11.5px; color: var(--muted); font-weight: 500; }
+.case-field textarea, .case-field .case-output {
+  font: 12.5px/1.5 var(--mono); background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 7px 9px; resize: vertical; min-height: 64px; outline: none; color: var(--text);
+}
+.case-field textarea:focus { border-color: var(--accent); }
+.case-field textarea.invalid { border-color: var(--err); }
+.case-field.wide { grid-column: 1 / -1; }
+.case-output { min-height: 34px !important; white-space: pre-wrap; word-break: break-all; color: var(--text-2); }
+.case-output.pass { border-color: color-mix(in srgb, var(--ret) 50%, var(--border)); }
+.case-output.fail { border-color: color-mix(in srgb, var(--err) 50%, var(--border)); }
+.case-hint { font-size: 11.5px; color: var(--muted); grid-column: 1 / -1; margin-top: -4px; }
+.case-error { font-size: 11.5px; color: var(--err); }
+
+@media (max-width: 900px) {
+  .editor-card { min-height: 0; flex: none; }
+  .editor-host { flex: none; height: 340px; }
+  .tests { max-height: none; }
+  .case-body { grid-template-columns: 1fr; }
+}

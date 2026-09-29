@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Render Test</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/editor.css">
+  <link rel="stylesheet" href="../css/visualizer.css">
+  <style>
+    body { display: block; overflow: auto; padding: 16px; }
+    #summary { font: 14px var(--mono); white-space: pre-wrap; }
+    #sandbox { position: relative; width: 1100px; height: 700px; display: grid; grid-template-rows: auto 1fr 300px; gap: 8px; }
+  </style>
+</head>
+<body>
+  <!-- Renders every frame of every corpus problem through the real UI panels (all views, dock tabs, and view
+       modes), in both languages, and reports anything that throws or logs an error. Open while the backend runs. -->
+  <pre id="summary">running…</pre>
+  <div id="sandbox"><div id="stepbar" class="stepbar"></div><div id="stage" class="stage"></div><div id="dock" class="dock"></div></div>
+  <script type="module">
+    import { CORPUS } from './corpus.js';
+    import { SAMPLES } from '../js/samples.js';
+    import { execute } from '../js/api.js';
+    import { buildExecution } from '../js/state/executionState.js';
+    import { VisualizationPanel } from '../js/components/VisualizationPanel.js';
+    import { parseTestInput } from '../js/components/TestCasePanel.js';
+    import { detectViews } from '../js/visualizers/StructureDetector.js';
+
+    const params = new URLSearchParams(location.search);
+    const only = params.get('only') || '';
+    const problems = [...CORPUS, ...SAMPLES.map((s) => ({ id: 'sample:' + s.id, java: s.java, javascript: s.javascript, tests: s.tests }))]
+      .filter((p) => p.id.includes(only));
+
+    const errors = [];
+    const origError = console.error;
+    let current = '';
+    console.error = (...a) => { errors.push(`${current}: console.error ${a.map(String).join(' ').slice(0, 200)}`); origError(...a); };
+    window.addEventListener('error', (e) => errors.push(`${current}: uncaught ${e.message}`));
+
+    let overrides = {};
+    const panel = new VisualizationPanel({ stepbar: document.getElementById('stepbar'), stage: document.getElementById('stage'), dock: document.getElementById('dock') }, {
+      onMode: (key, mode) => { overrides[key] = mode; panel.setOverrides(overrides); },
+    });
+    const tabs = ['vars', 'stack', 'tree', 'heap', 'console'];
+    const summary = document.getElementById('summary');
+    let frames = 0;
+    let runs = 0;
+    const captionHits = new Map();
+
+    for (const p of problems) {
+      for (const lang of ['java', 'javascript']) {
+        if (!p[lang]) continue;
+        const t = p.tests[0];
+        const tc = typeof t.input === 'string' ? parseTestInput(t.input) : { ok: true, value: t.input };
+        current = `${p.id} [${lang}]`;
+        summary.textContent = `running ${current} (${runs} runs, ${frames} frames rendered)…`;
+        const result = await execute({ language: lang, code: p[lang], testCase: tc.value, maxSteps: 5000 }).promise;
+        runs++;
+        const run = { language: lang, caseLabel: 'Case 1', expected: t.expected, result };
+        let exec = null;
+        try {
+          exec = result.steps && result.steps.length ? buildExecution(result, p[lang], lang) : null;
+          panel.prepare(exec, run);
+          overrides = {};
+          panel.setOverrides(overrides);
+          const list = exec ? exec.frames : [null];
+          // every frame on the default tab; every tab on a sample of frames; every mode of every togglable view
+          for (let i = 0; i < list.length; i++) {
+            const f = list[i];
+            panel.render(f);
+            frames++;
+            const caption = document.querySelector('.view-caption');
+            if (p.dependency && [...document.querySelectorAll('.view-caption')].some((c) => p.dependency.test(c.textContent))) captionHits.set(current, true);
+            if (i % Math.max(1, Math.floor(list.length / 12)) === 0 || i === list.length - 1) {
+              for (const tab of tabs) { panel.setTab(tab); }
+              if (f) {
+                for (const v of detectViews(f, {}, exec)) {
+                  for (const m of v.modes || []) { overrides[v.key] = m; panel.setOverrides(overrides); panel.render(f); frames++; }
+                }
+                overrides = {};
+                panel.setOverrides(overrides);
+              }
+            }
+            if (i % 200 === 199) await new Promise((r) => setTimeout(r)); // let the page breathe
+          }
+        } catch (e) {
+          errors.push(`${current}: threw ${e && e.stack ? e.stack.split('\n').slice(0, 3).join(' | ') : e}`);
+        }
+        if (p.dependency && !captionHits.get(current)) errors.push(`${current}: no dependency caption matching ${p.dependency}`);
+      }
+    }
+    console.error = origError;
+    const report = { runs, frames, errors };
+    window.__renderReport = report;
+    summary.textContent = `${runs} runs, ${frames} frames rendered, ${errors.length} problems\n\n` + errors.join('\n');
+  </script>
+</body>
+</html>

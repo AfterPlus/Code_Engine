@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "visualizer",
+      "runtimeExecutable": "C:/Users/Admin/.jdks/openjdk-26.0.1/bin/java.exe",
+      "runtimeArgs": ["-jar", "backend/target/leetcode-visualizer-0.1.0.jar", "--spring.web.resources.static-locations=file:frontend/"],
+      "port": 8080
+    }
+  ]
+}
