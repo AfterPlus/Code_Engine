@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
  */
 public final class JavaInstrumenter {
 
-    static final String IMPORTS = "import java.util.*; import java.util.function.*; import java.util.stream.*; import java.math.*; ";
+    public static final String IMPORTS = "import java.util.*; import java.util.function.*; import java.util.stream.*; import java.math.*; ";
 
     private static final Pattern TOP_LEVEL_TYPE = Pattern.compile("\\b(class|interface|enum|record)\\s+([A-Za-z_$][\\w$]*)");
     private static final Pattern PUBLIC_TYPE = Pattern.compile("\\bpublic\\s+(?:final\\s+|abstract\\s+)*(?:class|interface|enum|record)\\s+([A-Za-z_$][\\w$]*)");
@@ -39,7 +39,28 @@ public final class JavaInstrumenter {
     }
 
     public PreparedSource prepare(String code) {
+        return prepare(code, null);
+    }
+
+    /** File name of the definitions unit; diagnostics from it are reported against the Definitions tab. */
+    public static final String DEFINITIONS_FILE = "LcvDefinitions.java";
+
+    private static final Pattern PUBLIC_MODIFIER = Pattern.compile(
+            "(?m)^(\\s*)public\\s+(?=(?:final\\s+|abstract\\s+)*(?:class|interface|enum|record)\\b)");
+
+    /**
+     * @param definitions classes LeetCode supplies (TreeNode, ListNode, Node...), compiled as their own unit and
+     *                    reported as injected (data, never traced); null or blank when there are none
+     */
+    public PreparedSource prepare(String code, String definitions) {
         String masked = maskCommentsAndStrings(code);
+        // only one top-level type per file may be public, so definitions lose the modifier
+        String defs = definitions == null || definitions.isBlank() ? null : PUBLIC_MODIFIER.matcher(definitions).replaceAll("$1");
+        Set<String> defined = new LinkedHashSet<>();
+        if (defs != null) {
+            Matcher dm = TOP_LEVEL_TYPE.matcher(maskCommentsAndStrings(defs));
+            while (dm.find()) defined.add(dm.group(2));
+        }
 
         // A package declaration would have to precede our imports; blank it out (same length keeps columns).
         Matcher pkg = PACKAGE.matcher(masked);
@@ -77,8 +98,12 @@ public final class JavaInstrumenter {
         files.put(fileName + ".java", main);
 
         Set<String> injected = new LinkedHashSet<>();
+        if (defs != null) {
+            files.put(DEFINITIONS_FILE, IMPORTS + defs);
+            injected.addAll(defined);
+        }
         for (String helper : new String[]{"ListNode", "TreeNode"}) {
-            if (!declared.containsKey(helper) && Pattern.compile("\\b" + helper + "\\b").matcher(masked).find()) {
+            if (!declared.containsKey(helper) && !defined.contains(helper) && Pattern.compile("\\b" + helper + "\\b").matcher(masked).find()) {
                 files.put(helper + ".java", readResource("/sandbox/defaults/" + helper + ".java"));
                 injected.add(helper);
             }

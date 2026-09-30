@@ -240,60 +240,41 @@
     return name + '{' + Object.keys(v).map((k) => k + ': ' + formatForConsole(v[k], depth + 1)).join(', ') + '}';
   }
 
-  function buildList(C, values) {
-    let head = null;
-    let tail = null;
-    for (const v of values) {
-      const n = new C(v);
-      n.next = null;
-      if (!head) head = n; else tail.next = n;
-      tail = n;
-    }
-    return head;
-  }
+  // ---- structures (see structures.js): plain JS objects through a tiny adapter
+  const S = () => root.LCVStructures || (typeof require !== 'undefined' ? require('./structures.js') : null);
+  const adapter = (classes) => ({
+    make: (cls, val) => { const C = classes[cls]; if (!C) throw new InvalidInput('class ' + cls + ' is not defined (add it in the Definitions tab)'); return new C(val); },
+    get: (n, f) => (n[f] === undefined ? null : n[f]),
+    set: (n, f, v) => { n[f] = v; },
+    has: (n, f) => n !== null && typeof n === 'object' && f in n,
+    newList: (items) => items,
+    items: (l) => (Array.isArray(l) ? l : null),
+    isNode: (x) => x !== null && typeof x === 'object' && 'val' in x,
+    className: (n) => (n && n.constructor && n.constructor.name) || '',
+  });
 
-  function buildTree(C, values) {
-    if (!values.length || values[0] === null) return null;
-    const mk = (v) => { const n = new C(v); n.left = null; n.right = null; return n; };
-    const rootNode = mk(values[0]);
-    const q = [rootNode];
-    let i = 1;
-    while (q.length && i < values.length) {
-      const p = q.shift();
-      if (i < values.length && values[i] !== null) { p.left = mk(values[i]); q.push(p.left); }
-      i++;
-      if (i < values.length && values[i] !== null) { p.right = mk(values[i]); q.push(p.right); }
-      i++;
-    }
-    return rootNode;
-  }
+  /** JSDoc types as LeetCode writes them: `Node|null`, `?TreeNode`, `_Node` -> the class name. */
+  const normType = (type) => (type || '').replace(/\s+/g, '').replace(/\|null|\|undefined|^\?/g, '').replace(/^_(?=Node$)/, '');
 
   function convertArg(value, type, env) {
     if (value === null || value === undefined) return value;
-    const t = (type || '').replace(/\s+/g, '');
-    if (t === 'ListNode' || t === 'TreeNode') {
+    const t = normType(type);
+    const kind = env.kinds[t];
+    if (kind && env.classes[t]) {
       // `p = 5` in a tree problem means the node with value 5 in a tree given earlier
-      if (!Array.isArray(value)) return findNode(env.built, value);
-      const built = t === 'ListNode' ? buildList(env.ListNode, value) : buildTree(env.TreeNode, value);
+      if (!Array.isArray(value)) return S().findNodeByValue(env.built, value, env.adapter);
+      let built;
+      try {
+        built = S().build(kind, t, value, env.adapter);
+      } catch (e) {
+        throw new InvalidInput(e.message);
+      }
       if (built) env.built.push(built);
       return built;
     }
     const arr = /^(.*)\[\]$/.exec(t) || /^Array<(.*)>$/.exec(t);
     if (arr && Array.isArray(value)) return value.map((v) => convertArg(v, arr[1], env));
     return value;
-  }
-
-  function findNode(roots, value) {
-    const seen = new Set();
-    const queue = [...roots];
-    while (queue.length) {
-      const n = queue.shift();
-      if (!n || seen.has(n)) continue;
-      seen.add(n);
-      if (n.val === value) return n;
-      queue.push(n.next, n.left, n.right);
-    }
-    throw new InvalidInput('no node with value ' + JSON.stringify(value) + ' in the earlier arguments');
   }
 
   /** LeetCode's linked-list-cycle input: the tail links back to the node at index `pos` (-1: no cycle). */
@@ -312,6 +293,15 @@
     tail.next = target;
   }
 
+  /** What a bare `Node` class is, judged from the definitions that declare it. */
+  function nodeKind(text) {
+    if (/\bchildren\b/.test(text)) return 'nary';
+    if (/\bneighbou?rs\b/.test(text)) return 'graph';
+    if (/\brandom\b/.test(text)) return 'random';
+    if (/\b(left|right)\b/.test(text)) return 'nextptr';
+    return 'list';
+  }
+
   class InvalidInput extends Error {}
 
   /**
@@ -321,7 +311,7 @@
   function resolveArgs(fn, testCase, env) {
     const tc = testCase || {};
     const names = new Set(fn.params);
-    const cyclePos = fn.params.some((p) => (fn.types[p] || '').trim() === 'ListNode') && 'pos' in tc && !names.has('pos');
+    const cyclePos = fn.params.some((p) => normType(fn.types[p]) === 'ListNode') && 'pos' in tc && !names.has('pos');
     const spare = Object.keys(tc).filter((k) => !names.has(k) && !(cyclePos && k === 'pos')).map((k) => tc[k]);
     env.built = [];
     const args = fn.params.map((p) => {
@@ -379,27 +369,10 @@
     if (Array.isArray(v) || ArrayBuffer.isView(v)) return Array.from(v, (x) => toJson(x, depth + 1));
     if (v instanceof Set) return [...v].map((x) => toJson(x, depth + 1));
     if (v instanceof Map) { const o = {}; for (const [k, x] of v) o[String(k)] = toJson(x, depth + 1); return o; }
-    if ('next' in v && 'val' in v) {
-      const out = [];
-      const seen = new Set();
-      for (let n = v; n && out.length < 10000; n = n.next) {
-        if (seen.has(n)) { out.push('...cycle'); break; }
-        seen.add(n);
-        out.push(toJson(n.val, depth + 1));
-      }
-      return out;
-    }
-    if ('left' in v && 'right' in v && 'val' in v) {
-      const out = [];
-      const q = [v];
-      while (q.length && out.length < 10000) {
-        const n = q.shift();
-        if (!n) { out.push(null); continue; }
-        out.push(toJson(n.val, depth + 1));
-        q.push(n.left, n.right);
-      }
-      while (out.length && out[out.length - 1] === null) out.pop();
-      return out;
+    if ('val' in v) {
+      const ad = adapter({});
+      const kind = S().kindOfNode(v, ad);
+      if (kind) return S().serialize(kind, v, ad, (x) => toJson(x, depth + 1));
     }
     const o = {};
     for (const k of Object.keys(v)) o[k] = toJson(v[k], depth + 1);
@@ -451,20 +424,42 @@
     for (const m of ['log', 'info', 'warn', 'error', 'debug']) {
       fakeConsole[m] = (...a) => T.print(a.map((x) => formatForConsole(x)).join(' ') + '\n');
     }
-    const prelude = Object.keys(HELPERS).filter((h) => !inst.topLevel.declared.includes(h)).map((h) => HELPERS[h]).join('\n');
+    const defs = (deps.definitions || '').trim() ? deps.definitions + '\n' : '';
+    const declaredIn = (text, n) => new RegExp('(?:\b(?:function|class)\s+' + n + '\b|\b(?:var|let|const)\s+' + n + '\s*=)').test(text);
     const fnNames = inst.topLevel.functions.map((f) => f.name);
     const globalNames = inst.topLevel.globals;
+    const CLASS_NAMES = ['ListNode', 'TreeNode', 'Node'];
     const epilogue = '\n;return { fns: {' + fnNames.map((n) => JSON.stringify(n) + ': ' + n).join(', ') + '}, ' +
-      'globals: () => [' + globalNames.join(', ') + '], ' +
-      'ListNode: typeof ListNode === "undefined" ? undefined : ListNode, ' +
-      'TreeNode: typeof TreeNode === "undefined" ? undefined : TreeNode };';
+      'globals: () => [' + globalNames.join(', ') + '], classes: {' +
+      CLASS_NAMES.map((n) => n + ': typeof ' + n + ' === "undefined" ? undefined : ' + n).join(', ') + '} };';
+    const buildFactory = (definitions) => {
+      const fallback = Object.keys(HELPERS)
+        .filter((h) => !inst.topLevel.declared.includes(h) && !declaredIn(definitions, h)).map((h) => HELPERS[h]).join('\n');
+      // Shadow the obvious escape hatches; the worker also deletes network APIs before running anything.
+      return new Function('__t', 'console', 'self', 'globalThis', 'postMessage', 'importScripts', 'fetch', 'XMLHttpRequest', 'WebSocket',
+        definitions + fallback + '\n' + inst.code + epilogue);
+    };
+
 
     let mod;
+    let activeDefs = defs;
     try {
-      // Shadow the obvious escape hatches; the worker also deletes network APIs before running anything.
-      const factory = new Function('__t', 'console', 'self', 'globalThis', 'postMessage', 'importScripts', 'fetch', 'XMLHttpRequest', 'WebSocket',
-        prelude + '\n' + inst.code + epilogue);
-      mod = factory(T, fakeConsole);
+      let factory;
+      try {
+        factory = buildFactory(defs);
+      } catch (e) {
+        // the solution declares a name the definitions also declare: the solution's own declaration wins
+        if (!defs || !(e instanceof SyntaxError)) throw e;
+        activeDefs = '';
+        factory = buildFactory('');
+      }
+      try {
+        mod = factory(T, fakeConsole);
+      } catch (e) {
+        if (!defs || !(e instanceof SyntaxError || (e instanceof TypeError && /redeclar|already/i.test(e.message)))) throw e;
+        activeDefs = '';
+        mod = buildFactory('')(T, fakeConsole);
+      }
     } catch (e) {
       result.status = 'RUNTIME_ERROR';
       result.error = { type: (e && e.name) || 'Error', message: String(e && e.message || e) };
@@ -478,13 +473,22 @@
       result.stdout = T.out;
       return finish();
     };
-    const env = { ListNode: mod.ListNode, TreeNode: mod.TreeNode, built: [] };
+    const kinds = {};
+    const defined = (n) => typeof mod.classes[n] === 'function';
+    if (defined('TreeNode')) kinds.TreeNode = 'tree';
+    if (defined('ListNode')) kinds.ListNode = 'list';
+    if (defined('Node')) kinds.Node = nodeKind(activeDefs || code);
+    const env = { classes: mod.classes, kinds, adapter: adapter(mod.classes), built: [] };
     let call;
     const design = designProblem(testCase, mod.fns);
     if (design) {
       const clean = (v) => JSON.parse(JSON.stringify(v === undefined ? null : v));
       call = () => {
-        const obj = new design.C(...clean(design.params[0]));
+        // constructor arguments typed by the JSDoc of `var BSTIterator = function(root)` (a tree or list is built)
+        const ctorInfo = inst.topLevel.functions.find((f) => f.name === design.ops[0] && !f.isClass);
+        env.built = [];
+        const ctorArgs = clean(design.params[0]).map((v, i) => (ctorInfo ? convertArg(v, ctorInfo.types[ctorInfo.params[i]], env) : v));
+        const obj = new design.C(...ctorArgs);
         const outputs = [null];
         for (let i = 1; i < design.ops.length; i++) {
           const m = obj[design.ops[i]];
@@ -509,7 +513,7 @@
         self = new fn();
         fn = self[target.name];
       }
-      const returnsNode = /^(ListNode|TreeNode)$/.test((target.types.$return || '').trim());
+      const returnsNode = Boolean(kinds[normType(target.types.$return)]);
       call = () => {
         const ret = fn.apply(self, args);
         if (ret === undefined) result.inPlace = true;

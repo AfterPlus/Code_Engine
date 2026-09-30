@@ -1,7 +1,7 @@
 // Example problems, in the milestone order from the spec: arrays + maps, recursion, binary search, linked
 // lists, trees (BFS), grids (DFS), graphs, DP, stacks, heaps. None of them has a special-cased visualizer.
 
-export const SAMPLES = [
+const BASE = [
   {
     id: 'two-sum',
     title: '1. Two Sum',
@@ -480,3 +480,8 @@ var findKthLargest = function(nums, k) {
     tests: [{ input: 'nums = [3,2,1,5,6,4], k = 2', expected: '5' }],
   },
 ];
+
+import { EXTRA, TREE_SAMPLES } from './samplesExtra.js';
+
+// Java + JavaScript come from BASE; Python, C++ and C from samplesExtra.js
+export const SAMPLES = [...BASE.map((s) => ({ ...s, ...(EXTRA[s.id] || {}) })), ...TREE_SAMPLES];

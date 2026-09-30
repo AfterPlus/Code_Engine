@@ -44,6 +44,7 @@ public class ExecutionResult {
     public record ExecutionError(String type, String message, Integer line, String function) {
     }
 
-    public record Diagnostic(long line, long column, String severity, String message) {
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record Diagnostic(long line, long column, String severity, String message, String file) {
     }
 }

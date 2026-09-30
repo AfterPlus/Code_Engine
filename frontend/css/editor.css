@@ -12,6 +12,29 @@
 .editor-card { flex: 1 1 auto; min-height: 220px; }
 .editor-host { flex: 1; min-height: 0; position: relative; border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; }
 
+/* file tabs: the solution and the definitions LeetCode ships with the problem */
+.editor-head { padding-top: 0; padding-bottom: 0; }
+.editor-tabs { display: flex; gap: 2px; align-self: stretch; align-items: flex-end; }
+.editor-tab {
+  position: relative; border: 0; background: transparent; cursor: pointer; color: var(--muted);
+  padding: 9px 12px 8px; font: 600 12px var(--font); letter-spacing: 0.04em; text-transform: uppercase;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.editor-tab:hover { color: var(--text); }
+.editor-tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+.tab-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 6px; vertical-align: 2px; }
+.defs-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 6px 12px; font-size: 12px; color: var(--muted);
+  background: var(--panel-2); border-bottom: 1px solid var(--border);
+}
+.defs-bar[hidden] { display: none; }
+.defs-bar .grow { flex: 1 1 auto; min-width: 120px; }
+.defs-bar select {
+  font: 12px var(--font); color: var(--text); background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 3px 6px; max-width: 100%;
+}
+
 /* Monaco decorations: the line about to run, and the line that just ran */
 .lcv-line-next { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
 .lcv-line-prev { background: rgba(127, 136, 155, 0.08); }

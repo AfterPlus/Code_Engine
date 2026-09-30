@@ -134,7 +134,7 @@ public final class Harness {
             result.put("inPlace", true);
         } else {
             Class<?> rt = method.getReturnType();
-            boolean nodeType = selfField(rt, "next") != null || (selfField(rt, "left") != null && selfField(rt, "right") != null);
+            boolean nodeType = structKind(rt) != null;
             result.put("output", ret == null && nodeType ? List.of() : toJson(ret, 0));
         }
         return result;
@@ -488,11 +488,16 @@ public final class Harness {
             return out;
         }
         // User-defined node types, recognized by shape rather than by name.
-        boolean isList = selfField(c, "next") != null;
-        boolean isTree = selfField(c, "left") != null && selfField(c, "right") != null;
-        if (!isList && !isTree) throw new InvalidInput("cannot build a " + c.getSimpleName() + " from JSON");
+        String kind = structKind(c);
+        if (kind == null) throw new InvalidInput("cannot build a " + c.getSimpleName() + " from JSON");
         if (!(json instanceof List)) return findNode(c, json);
-        Object built = isList ? buildList(c, asList(json)) : buildTree(c, asList(json));
+        Object built = switch (kind) {
+            case "list" -> buildList(c, asList(json));
+            case "tree", "nextptr" -> buildTree(c, asList(json));
+            case "nary" -> buildNary(c, asList(json));
+            case "graph" -> buildGraph(c, asList(json));
+            default -> buildRandom(c, asList(json));
+        };
         if (built != null) builtNodes.add(built);
         return built;
     }
@@ -502,11 +507,20 @@ public final class Harness {
         Field vf = valueField(c);
         vf.setAccessible(true);
         List<Field> links = new ArrayList<>();
-        for (String f : new String[]{"next", "left", "right"}) {
+        for (String f : new String[]{"next", "left", "right", "random", "child"}) {
             Field l = selfField(c, f);
             if (l != null) {
                 l.setAccessible(true);
                 links.add(l);
+            }
+        }
+        List<Field> collections = new ArrayList<>();
+        for (String f : new String[]{"children", "neighbors"}) {
+            try {
+                Field l = c.getDeclaredField(f);
+                l.setAccessible(true);
+                collections.add(l);
+            } catch (NoSuchFieldException ignored) {
             }
         }
         Object wanted = convertClass(json, vf.getType(), null);
@@ -521,6 +535,10 @@ public final class Harness {
                 for (Field l : links) {
                     Object x = l.get(n);
                     if (x != null) queue.add(x);
+                }
+                for (Field l : collections) {
+                    Object x = l.get(n);
+                    if (x instanceof Collection<?> col) for (Object o : col) if (o != null) queue.add(o);
                 }
             }
         } catch (IllegalAccessException e) {
@@ -667,11 +685,222 @@ public final class Harness {
             return out;
         }
         try {
-            if (selfField(c, "next") != null) return listToJson(v, c);
-            if (selfField(c, "left") != null && selfField(c, "right") != null) return treeToJson(v, c);
+            String kind = structKind(c);
+            if (kind != null) {
+                switch (kind) {
+                    case "list": return listToJson(v, c);
+                    case "tree": return treeToJson(v, c);
+                    case "nary": return naryToJson(v, c);
+                    case "graph": return graphToJson(v, c);
+                    case "random": return randomToJson(v, c);
+                    default: return nextptrToJson(v, c);
+                }
+            }
         } catch (ReflectiveOperationException ignored) {
         }
         return String.valueOf(v);
+    }
+
+    /**
+     * What a user-defined node class stands for, judged by its fields (never its name): "list" (next), "tree" (left,
+     * right), "nextptr" (left, right, next), "nary" (children), "graph" (neighbors), "random" (next + random).
+     */
+    private static String structKind(Class<?> c) {
+        if (c.isPrimitive() || c.isArray() || c.getName().startsWith("java.")) return null;
+        if (hasCollectionOf(c, "children")) return "nary";
+        if (hasCollectionOf(c, "neighbors")) return "graph";
+        if (selfField(c, "next") != null && selfField(c, "random") != null) return "random";
+        if (selfField(c, "left") != null && selfField(c, "right") != null) return selfField(c, "next") != null ? "nextptr" : "tree";
+        if (selfField(c, "next") != null) return "list";
+        return null;
+    }
+
+    private static boolean hasCollectionOf(Class<?> c, String name) {
+        try {
+            Field f = c.getDeclaredField(name);
+            return Collection.class.isAssignableFrom(f.getType());
+        } catch (NoSuchFieldException e) {
+            return false;
+        }
+    }
+
+    private static Object buildNary(Class<?> c, List<?> values) {
+        if (values.isEmpty() || values.get(0) == null) return null;
+        try {
+            Field children = c.getDeclaredField("children");
+            children.setAccessible(true);
+            Object root = newNode(c, values.get(0));
+            children.set(root, new ArrayList<>());
+            Deque<Object> queue = new ArrayDeque<>();
+            queue.add(root);
+            int i = 2; // values[1] is the null that closes the root
+            while (!queue.isEmpty() && i < values.size()) {
+                Object parent = queue.poll();
+                List<Object> kids = new ArrayList<>();
+                while (i < values.size() && values.get(i) != null) {
+                    Object kid = newNode(c, values.get(i++));
+                    children.set(kid, new ArrayList<>());
+                    kids.add(kid);
+                    queue.add(kid);
+                }
+                children.set(parent, kids);
+                i++;
+            }
+            return root;
+        } catch (ReflectiveOperationException e) {
+            throw new InvalidInput("cannot build " + c.getSimpleName() + ": " + e);
+        }
+    }
+
+    /** LeetCode's graph encoding: node i (value i+1) has the neighbors adjacency[i]. */
+    private static Object buildGraph(Class<?> c, List<?> adjacency) {
+        if (adjacency.isEmpty()) return null;
+        try {
+            Field neighbors = c.getDeclaredField("neighbors");
+            neighbors.setAccessible(true);
+            List<Object> nodes = new ArrayList<>();
+            for (int i = 0; i < adjacency.size(); i++) {
+                Object n = newNode(c, i + 1);
+                neighbors.set(n, new ArrayList<>());
+                nodes.add(n);
+            }
+            for (int i = 0; i < adjacency.size(); i++) {
+                List<Object> nb = new ArrayList<>();
+                for (Object v : asList(adjacency.get(i))) {
+                    int k = num(v).intValue();
+                    if (k < 1 || k > nodes.size()) throw new InvalidInput("graph neighbor " + k + " is out of range");
+                    nb.add(nodes.get(k - 1));
+                }
+                neighbors.set(nodes.get(i), nb);
+            }
+            return nodes.get(0);
+        } catch (ReflectiveOperationException e) {
+            throw new InvalidInput("cannot build " + c.getSimpleName() + ": " + e);
+        }
+    }
+
+    /** [[val, randomIndex], ...] */
+    private static Object buildRandom(Class<?> c, List<?> entries) {
+        if (entries.isEmpty()) return null;
+        try {
+            Field next = c.getDeclaredField("next");
+            Field random = c.getDeclaredField("random");
+            next.setAccessible(true);
+            random.setAccessible(true);
+            List<Object> nodes = new ArrayList<>();
+            for (Object e : entries) nodes.add(newNode(c, asList(e).get(0)));
+            for (int i = 0; i < nodes.size(); i++) {
+                if (i + 1 < nodes.size()) next.set(nodes.get(i), nodes.get(i + 1));
+                Object r = asList(entries.get(i)).get(1);
+                if (r != null) {
+                    int k = num(r).intValue();
+                    if (k < 0 || k >= nodes.size()) throw new InvalidInput("random index " + k + " is out of range");
+                    random.set(nodes.get(i), nodes.get(k));
+                }
+            }
+            return nodes.get(0);
+        } catch (ReflectiveOperationException e) {
+            throw new InvalidInput("cannot build " + c.getSimpleName() + ": " + e);
+        }
+    }
+
+    private static List<Object> naryToJson(Object root, Class<?> c) throws ReflectiveOperationException {
+        Field children = c.getDeclaredField("children");
+        Field vf = valueField(c);
+        children.setAccessible(true);
+        vf.setAccessible(true);
+        List<Object> out = new ArrayList<>();
+        out.add(toJson(vf.get(root), 1));
+        out.add(null);
+        List<Object> queue = new ArrayList<>();
+        queue.add(root);
+        for (int head = 0; head < queue.size() && out.size() < 10_000; head++) {
+            Object kids = children.get(queue.get(head));
+            if (kids instanceof Collection<?> col) {
+                for (Object k : col) {
+                    out.add(toJson(vf.get(k), 1));
+                    queue.add(k);
+                }
+            }
+            out.add(null);
+        }
+        while (!out.isEmpty() && out.get(out.size() - 1) == null) out.remove(out.size() - 1);
+        return out;
+    }
+
+    private static List<Object> graphToJson(Object start, Class<?> c) throws ReflectiveOperationException {
+        Field neighbors = c.getDeclaredField("neighbors");
+        Field vf = valueField(c);
+        neighbors.setAccessible(true);
+        vf.setAccessible(true);
+        TreeMap<Integer, Object> byVal = new TreeMap<>();
+        IdentityHashMap<Object, Boolean> seen = new IdentityHashMap<>();
+        Deque<Object> queue = new ArrayDeque<>();
+        queue.add(start);
+        seen.put(start, true);
+        while (!queue.isEmpty() && seen.size() < 10_000) {
+            Object n = queue.poll();
+            byVal.put(((Number) vf.get(n)).intValue(), n);
+            Object nb = neighbors.get(n);
+            if (nb instanceof Collection<?> col) for (Object m : col) if (m != null && seen.put(m, true) == null) queue.add(m);
+        }
+        List<Object> out = new ArrayList<>();
+        int max = byVal.isEmpty() ? 0 : byVal.lastKey();
+        for (int v = 1; v <= max; v++) {
+            List<Object> row = new ArrayList<>();
+            Object n = byVal.get(v);
+            if (n != null && neighbors.get(n) instanceof Collection<?> col) for (Object m : col) row.add(toJson(vf.get(m), 1));
+            out.add(row);
+        }
+        return out;
+    }
+
+    private static List<Object> randomToJson(Object head, Class<?> c) throws ReflectiveOperationException {
+        Field next = c.getDeclaredField("next");
+        Field random = c.getDeclaredField("random");
+        Field vf = valueField(c);
+        next.setAccessible(true);
+        random.setAccessible(true);
+        vf.setAccessible(true);
+        List<Object> nodes = new ArrayList<>();
+        IdentityHashMap<Object, Integer> index = new IdentityHashMap<>();
+        for (Object n = head; n != null && nodes.size() < 10_000 && !index.containsKey(n); n = next.get(n)) {
+            index.put(n, nodes.size());
+            nodes.add(n);
+        }
+        List<Object> out = new ArrayList<>();
+        for (Object n : nodes) {
+            Object r = random.get(n);
+            List<Object> pair = new ArrayList<>();
+            pair.add(toJson(vf.get(n), 1));
+            pair.add(r == null ? null : index.getOrDefault(r, -1));
+            out.add(pair);
+        }
+        return out;
+    }
+
+    /** Level order following the next pointers, each row closed with "#". */
+    private static List<Object> nextptrToJson(Object root, Class<?> c) throws ReflectiveOperationException {
+        Field next = c.getDeclaredField("next");
+        Field left = c.getDeclaredField("left");
+        Field right = c.getDeclaredField("right");
+        Field vf = valueField(c);
+        next.setAccessible(true);
+        left.setAccessible(true);
+        right.setAccessible(true);
+        vf.setAccessible(true);
+        List<Object> out = new ArrayList<>();
+        Object level = root;
+        while (level != null && out.size() < 10_000) {
+            Object first = null;
+            for (Object n = level; n != null && out.size() < 10_000; n = next.get(n)) {
+                out.add(toJson(vf.get(n), 1));
+                if (first == null) first = left.get(n) != null ? left.get(n) : right.get(n);
+            }
+            out.add("#");
+            level = first;
+        }
+        return out;
     }
 
     private static List<Object> listToJson(Object head, Class<?> c) throws ReflectiveOperationException {

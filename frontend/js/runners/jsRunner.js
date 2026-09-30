@@ -1,6 +1,6 @@
 // Main-thread side of the JavaScript runner: one short-lived Web Worker per execution, killed on timeout/cancel.
 
-export function runJavaScript({ code, testCase, maxSteps, timeoutMs = 10000 }) {
+export function runJavaScript({ code, definitions, testCase, maxSteps, timeoutMs = 10000 }) {
   let worker;
   let timer;
   let settle;
@@ -29,7 +29,7 @@ export function runJavaScript({ code, testCase, maxSteps, timeoutMs = 10000 }) {
       r.executionTimeMs = Math.round(performance.now() - started);
       settle(r);
     }, timeoutMs + 2000);
-    worker.postMessage({ code, testCase, maxSteps, timeoutMs });
+    worker.postMessage({ code, definitions, testCase, maxSteps, timeoutMs });
   });
   return {
     promise,

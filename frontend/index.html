@@ -24,10 +24,7 @@
         <span class="sr-only">Examples</span>
         <select id="examples"></select>
       </label>
-      <div class="segmented" id="language" role="radiogroup" aria-label="Language">
-        <button type="button" role="radio" data-lang="java">Java</button>
-        <button type="button" role="radio" data-lang="javascript">JavaScript</button>
-      </div>
+      <div class="segmented" id="language" role="radiogroup" aria-label="Language"></div>
     </div>
     <div class="topbar-spacer"></div>
     <span class="status-pill" id="status" hidden></span>
@@ -56,7 +53,7 @@
           <span>Java backend</span>
           <input id="set-backend" type="text" placeholder="same origin" spellcheck="false">
         </label>
-        <p class="field-hint">JavaScript runs in your browser. Java is traced by the Spring Boot backend.</p>
+        <p class="field-hint">JavaScript, Python, C and C++ run in your browser. Java is traced by the Spring Boot backend.</p>
       </div>
     </div>
   </header>
@@ -72,13 +69,17 @@
       </div>
 
       <div class="card editor-card">
-        <div class="card-head">
-          <h2>Solution</h2>
+        <div class="card-head editor-head">
+          <div class="editor-tabs" id="editor-tabs" role="tablist" aria-label="Editor files">
+            <button type="button" class="editor-tab" role="tab" data-tab="solution" aria-selected="true">Solution</button>
+            <button type="button" class="editor-tab" role="tab" data-tab="defs" aria-selected="false" title="Classes LeetCode defines for you (TreeNode, ListNode, Node...). They run before your solution and are not traced.">Definitions<span class="tab-dot" id="defs-dot" hidden></span></button>
+          </div>
           <span class="card-sub" id="editor-lang"></span>
           <div class="card-actions">
             <button type="button" class="btn btn-ghost btn-sm" id="reset-code" title="Restore the example's code">Reset</button>
           </div>
         </div>
+        <div class="defs-bar" id="defs-bar" hidden></div>
         <div class="editor-host" id="editor"></div>
       </div>
 

@@ -1,0 +1,36 @@
+apple=5 banana=3 cherry=1 date=9 elder=1 
+5 1 0 9
+banana:3
+banana cherry date elder 
+banana elder
+cherry date
+0: 0 3 6 9 
+1: 1 4 7 
+2: 2 5 8 
+1 2 4 5 6 9 
+6 1 6 1 1
+4 5
+3 5
+2
+(1,5)(2,1)(2,3)
+1-2 1-9 2-1 
+16 4
+9 4 1 
+ac3
+b
+9 8 5 3 2 1 
+1 6
+nine
+2 3 1 
+-1 2 0 4
+0 1 
+1one 1one
+1 2.5 x
+12 20 31 
+20 31 12 
+1 2 4 7 9 
+2 3 1
+4 2 1 9 7 
+2 39 3
+123 132 213 231 312 321 
+fig kiwi pear apple 

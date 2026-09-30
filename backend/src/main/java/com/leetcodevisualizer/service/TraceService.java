@@ -48,7 +48,7 @@ public class TraceService {
             if (invalid != null) return fail(r, ExecutionStatus.INVALID_INPUT, "Invalid Input", invalid, null);
 
             work = sandbox.createWorkDir();
-            JavaInstrumenter.PreparedSource src = instrumenter.prepare(req.code());
+            JavaInstrumenter.PreparedSource src = instrumenter.prepare(req.code(), req.definitions());
             Path classes = work.resolve("classes");
             SandboxService.CompileOutput compiled = sandbox.compile(src.files(), work.resolve("src"), classes, List.of());
             if (!compiled.success()) return compileError(r, compiled, src);
@@ -112,10 +112,13 @@ public class TraceService {
         for (Diagnostic<? extends JavaFileObject> d : out.diagnostics()) {
             if (d.getKind() != Diagnostic.Kind.ERROR) continue;
             boolean inMain = d.getSource() != null && d.getSource().getName().endsWith(mainFile);
-            long line = inMain ? d.getLineNumber() : 0;
+            boolean inDefs = d.getSource() != null && d.getSource().getName().endsWith(JavaInstrumenter.DEFINITIONS_FILE);
+            long line = inMain || inDefs ? d.getLineNumber() : 0;
             long col = d.getColumnNumber();
-            if (line == 1) col = Math.max(1, col - prefix);
-            r.diagnostics.add(new ExecutionResult.Diagnostic(line, col, "error", d.getMessage(Locale.ROOT)));
+            if (line == 1 && inMain) col = Math.max(1, col - prefix);
+            if (line == 1 && inDefs) col = Math.max(1, col - JavaInstrumenter.IMPORTS.length());
+            r.diagnostics.add(new ExecutionResult.Diagnostic(line, col, "error",
+                    (inDefs ? "In the Definitions tab: " : "") + d.getMessage(Locale.ROOT), inDefs ? "definitions" : null));
         }
         ExecutionResult.Diagnostic first = r.diagnostics.isEmpty() ? null : r.diagnostics.get(0);
         return fail(r, ExecutionStatus.COMPILE_ERROR, "Compile Error",

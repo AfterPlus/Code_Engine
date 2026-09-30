@@ -5,7 +5,7 @@ state at every step, and turns it into a visual dry run**: arrays with pointers,
 linked lists, trees, graphs, DP tables, the call stack, a recursion tree, and memory. You step through it
 frame by frame.
 
-Nothing is pattern-matched per problem. Both languages produce one generic execution trace, and every
+Nothing is pattern-matched per problem. Every language produces one generic execution trace, and every
 visualizer is chosen from the runtime shape of the data plus how the source code uses it.
 
 ```
@@ -33,7 +33,8 @@ cd backend
 java -jar target/leetcode-visualizer-0.1.0.jar
 ```
 
-**JavaScript only:** JavaScript is traced entirely in the browser, so the frontend works without the backend.
+**Everything but Java:** JavaScript, Python, C and C++ are traced entirely in the browser, so the frontend works without
+the backend (Python loads Pyodide from the jsDelivr CDN on first use; the C/C++ parser is vendored in `js/vendor`).
 Serve the folder over HTTP (Web Workers don't load from `file://`), for example `npx serve frontend` or
 `python -m http.server -d frontend`. If the Java backend runs elsewhere, set its URL under ⚙ Settings.
 
@@ -42,13 +43,31 @@ Serve the folder over HTTP (Web Workers don't load from `file://`), for example 
 ```bash
 cd backend && ./mvnw test           # Java tracer end to end: real javac, real sandboxed JVM, real JDI
 node --test frontend/tests/jsTracer.test.cjs   # JavaScript instrumenter + tracer
+node frontend/tests/syntaxCheck.cjs            # parses every frontend file (catches slips without a browser)
+node frontend/tests/cppDiff.cjs                # C/C++ interpreter vs. recorded output of a real compiler (tests/cpp/programs)
+node frontend/tests/engines.mjs js,py,cpp,c    # ~270 LeetCode tree/list/graph problem runs across the browser engines
+LCV_BACKEND=http://localhost:8080 node frontend/tests/engines.mjs java   # the same problems through the Java backend
+CORPUS=samples node frontend/tests/engines.mjs js,py,cpp,c               # the built-in examples in every language
 ```
+
+`cppDiff.cjs --regen` re-records the expected outputs with a real compiler (`pip install ziglang`, then set
+`ZIG_PYTHONPATH` if it is installed with `--target`). `engines.mjs` needs Python 3 on the PATH for the `py` engine.
 
 ## Using it
 
 - **Examples ▾** loads ten problems in the spec's milestone order (Two Sum, Fibonacci, Binary Search, Reverse
   Linked List, Level Order, Number of Islands, Path in Graph, LCS, Valid Parentheses, Kth Largest), each in
-  Java and JavaScript.
+  Java, JavaScript, Python, C++ and (where it makes sense) C, plus three tree examples that use the Definitions tab.
+- **Definitions tab.** LeetCode ships some classes with the problem and never shows them in the editor (`TreeNode`,
+  `ListNode`, `Node` for N-ary trees, graphs, random-pointer lists, trees with `next`...). Put them in the second editor
+  tab so the solution can be pasted exactly as it is on LeetCode: the tab's text runs before the solution, is never
+  traced, and never shifts the solution's line numbers. "Insert definition…" adds LeetCode's own version of each class
+  in the current language, and a bar suggests the ones your solution uses but nothing declares. The class also decides
+  how test inputs are built (`[1,null,3,2,4,null,5,6]` becomes an N-ary tree when `Node` has `children`; adjacency
+  lists become graphs when it has `neighbors`). TreeNode and ListNode are still added automatically if missing.
+- **Hover to inspect.** With a run loaded, hover any variable in the solution to see its value at the current step:
+  `root.left`, `nums[i]`, whole arrays, maps, linked lists and trees (a tree shows as its level-order list), and what
+  the previous line changed it from.
 - **Test cases** accept JSON (`{"nums": [2,7], "target": 9}`) or LeetCode's own format
   (`nums = [2,7], target = 9`). Values are matched to parameters by name. `ListNode`/`TreeNode` parameters are
   built from arrays (level order for trees): in Java from the parameter type, in JavaScript from the JSDoc
@@ -172,14 +191,24 @@ the server at all.
   playback): done.
 - **Phase 2** (HashMap/HashSet, Stack, Queue, Linked List, objects, heap view): done.
 - **Phase 3** (trees, graphs, DP tables, pointers/references, automatic structure detection): done.
-- **Phase 4**: multiple test cases are done. C++, Python, saved sessions, and shareable visualizations are not.
+- **Phase 4**: multiple test cases, Python, C++ and C are done. Saved sessions and shareable visualizations are not.
 
 API (§36): `POST /api/v1/execution/run` (waits up to 20 s, else returns `QUEUED`/`RUNNING` to poll),
 `GET /api/v1/execution/{id}`, `POST /api/v1/execution/{id}/cancel`, `GET /api/v1/health`.
 
 ## Known limitations
 
-- JavaScript is traced in the browser rather than through the backend API. The spec routes all languages
+- **Python** runs on Pyodide (CPython 3.14 in WebAssembly, module worker) under `sys.settrace`; recursion is capped at
+  about 1000 frames. Only the standard library is available.
+- **C and C++ run on a built-in interpreter, not a compiler**: tree-sitter parses, a tree-walking interpreter executes.
+  It covers what LeetCode solutions use (classes, templates by erasure, references, pointers, `new`/`malloc`, lambdas,
+  the STL containers and algorithms, `cout`/`printf`, `stringstream`) and is checked against a real compiler, but it is
+  not a full C++: no `goto`, coroutines, function-like macros, multithreading, or undefined behaviour (out-of-range
+  indexing and null dereferences raise a clear error instead). Recursion is limited to about 1500 frames, and
+  `unordered_map` iterates in insertion order rather than hash order.
+- Hover values are read from the trace, so they exist only while a run is loaded; the plain-textarea fallback editor
+  (offline, no Monaco) has no hover.
+- JavaScript, Python, C and C++ are traced in the browser rather than through the backend API. The spec routes all languages
   through the server; doing JS client-side keeps it sandboxed in the user's browser and working offline, and
   the result format is identical.
 - Java traces the solution's thread only. Field initializers of `Solution` run before tracing starts (their

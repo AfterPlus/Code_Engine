@@ -1,12 +1,15 @@
 // App wiring: editor + problem + test cases on the left, visualization on the right, player at the bottom.
 // Flow: Run -> execute (backend JVM or browser worker) -> normalized trace -> buildExecution -> timeline.
 
-import { h, storage } from './util/dom.js';
+import { h, mount, storage } from './util/dom.js';
 import { execute } from './api.js';
 import { buildExecution } from './state/executionState.js';
 import { Timeline } from './state/timeline.js';
 import { Player } from './player.js';
 import { SAMPLES } from './samples.js';
+import { LANGUAGES, languageInfo } from './languages.js';
+import { PRESET_INFO, presetCode, missingPresets, defaultDefinitions } from './definitions.js';
+import { resolveHover } from './components/HoverInfo.js';
 import { CodeEditor } from './components/CodeEditor.js';
 import { ProblemPanel } from './components/ProblemPanel.js';
 import { TestCasePanel, parseTestInput, parseExpected, sameOutput } from './components/TestCasePanel.js';
@@ -21,13 +24,31 @@ function sampleById(id) {
   return SAMPLES.find((s) => s.id === id) || null;
 }
 
+/** The example's code in a language, or a starting stub when the example has no version in that language. */
+function sampleCode(s, lang) {
+  if (s[lang]) return s[lang];
+  const name = languageInfo(lang).label;
+  return `${lang === 'python' ? '#' : '//'} No ${name} version of this example yet. Paste your ${name} solution here.\n`;
+}
+
+function sampleCodes(s) {
+  return Object.fromEntries(LANGUAGES.map((l) => [l.id, sampleCode(s, l.id)]));
+}
+
+/** Definitions (Node classes) each language needs for the given code, unless the example ships its own. */
+function sampleDefs(s, codes) {
+  return Object.fromEntries(LANGUAGES.map((l) => [l.id, (s.defs && s.defs[l.id]) || defaultDefinitions(l.id, codes[l.id])]));
+}
+
 function freshState() {
   const s = SAMPLES[0];
+  const code = sampleCodes(s);
   return {
     language: 'java',
     sampleId: s.id,
     problem: s.problem,
-    code: { java: s.java, javascript: s.javascript },
+    code,
+    defs: sampleDefs(s, code),
     tests: s.tests.map((t) => ({ ...t })),
     activeTest: 0,
     overrides: {},
@@ -38,6 +59,14 @@ function freshState() {
 
 const state = { ...freshState(), ...storage.get(STORE_KEY, {}) };
 state.settings = { ...freshState().settings, ...(state.settings || {}) };
+// state saved before a language existed: fill the gaps from the current example
+{
+  const base = sampleById(state.sampleId) || SAMPLES[0];
+  const fresh = sampleCodes(base);
+  state.code = { ...fresh, ...(state.code || {}) };
+  state.defs = { ...sampleDefs(base, state.code), ...(state.defs || {}) };
+  if (!LANGUAGES.some((l) => l.id === state.language)) state.language = 'java';
+}
 const save = () => storage.set(STORE_KEY, state);
 
 // ------------------------------------------------------------------------------------------ theme
@@ -80,13 +109,17 @@ const tests = new TestCasePanel($('tests'), {
 tests.setTests(state.tests, state.activeTest);
 
 let lastRunCode = null;
+let lastRunDefs = null;
 const editor = new CodeEditor($('editor'), {
   value: state.code[state.language] || '',
+  defs: state.defs[state.language] || '',
   language: state.language,
-  onChange: (value) => {
-    state.code[state.language] = value;
+  onChange: (value, tab) => {
+    if (tab === 'defs') state.defs[state.language] = value;
+    else state.code[state.language] = value;
     save();
-    editor.setStale(lastRunCode !== null && value !== lastRunCode);
+    editor.setStale(lastRunCode !== null && (editor.getValue() !== lastRunCode || editor.getValue('defs') !== lastRunDefs));
+    renderDefsUi();
   },
 });
 
@@ -104,20 +137,24 @@ function loadSample(s) {
   if (running) cancelRun();
   state.sampleId = s.id;
   state.problem = s.problem;
-  state.code = { java: s.java, javascript: s.javascript };
+  state.code = sampleCodes(s);
+  state.defs = sampleDefs(s, state.code);
   state.tests = s.tests.map((t) => ({ ...t }));
   state.activeTest = 0;
   save();
   problem.setValue(s.problem);
   editor.setValue(state.code[state.language]);
+  editor.setValue(state.defs[state.language], 'defs');
   tests.setTests(state.tests, 0);
+  renderDefsUi();
   resetRun();
 }
 
-const langButtons = [...$('language').querySelectorAll('button')];
+const langButtons = LANGUAGES.map((l) => h('button', { type: 'button', role: 'radio', 'data-lang': l.id }, l.label));
+$('language').append(...langButtons);
 function renderLanguage() {
   langButtons.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.lang === state.language)));
-  $('editor-lang').textContent = state.language === 'java' ? 'Java · traced with the JVM debugger' : 'JavaScript · traced in your browser';
+  $('editor-lang').textContent = languageInfo(state.language).note;
 }
 langButtons.forEach((b) => b.addEventListener('click', () => {
   if (b.dataset.lang === state.language) return;
@@ -126,15 +163,58 @@ langButtons.forEach((b) => b.addEventListener('click', () => {
   save();
   editor.setLanguage(state.language);
   editor.setValue(state.code[state.language] || '');
+  editor.setValue(state.defs[state.language] || '', 'defs');
   renderLanguage();
+  renderDefsUi();
   resetRun();
 }));
 renderLanguage();
 
 $('reset-code').addEventListener('click', () => {
   const s = sampleById(state.sampleId);
-  if (s) editor.setValue(s[state.language]);
+  if (!s) return;
+  if (editor.tab === 'defs') editor.setValue(sampleDefs(s, sampleCodes(s))[state.language] || '', 'defs');
+  else editor.setValue(sampleCode(s, state.language));
 });
+
+// ------------------------------------------------------------------------------------------ definitions tab
+
+const tabButtons = [...$('editor-tabs').querySelectorAll('.editor-tab')];
+function showTab(tab) {
+  editor.showTab(tab);
+  tabButtons.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+  renderDefsUi();
+}
+tabButtons.forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+/** Definition bar: suggests classes the solution uses but nothing declares, and inserts LeetCode's presets. */
+function renderDefsUi() {
+  const lang = state.language;
+  const defs = editor.getValue('defs');
+  $('defs-dot').hidden = !defs.trim();
+  const bar = $('defs-bar');
+  const missing = missingPresets(lang, editor.getValue(), defs);
+  const onDefs = editor.tab === 'defs';
+  if (!onDefs && !missing.length) { bar.hidden = true; return; }
+  bar.hidden = false;
+  const insert = (id) => {
+    const cur = editor.getValue('defs');
+    editor.setValue((cur.trim() ? cur.replace(/\s*$/, '\n\n') : '') + presetCode(lang, id), 'defs');
+  };
+  const items = [];
+  if (!onDefs) {
+    const names = [...new Set(missing.map((id) => PRESET_INFO[id].className))].join(', ');
+    items.push(h('span', { class: 'grow' }, `Uses ${names}, which LeetCode defines for you. `),
+      h('button', { type: 'button', class: 'btn btn-sm', onclick: () => { missing.forEach(insert); showTab('defs'); } }, 'Add to Definitions'));
+  } else {
+    const select = h('select', { 'aria-label': 'Insert a LeetCode definition' },
+      h('option', { value: '' }, 'Insert definition…'),
+      ...Object.entries(PRESET_INFO).filter(([id]) => presetCode(lang, id)).map(([id, info]) => h('option', { value: id }, info.label)));
+    select.addEventListener('change', () => { if (select.value) insert(select.value); select.value = ''; });
+    items.push(h('span', { class: 'grow' }, 'Classes LeetCode defines for you. They run before your solution and are not traced.'), select);
+  }
+  mount(bar, items);
+}
 
 // settings popover
 const settingsBtn = $('settings-toggle');
@@ -213,11 +293,12 @@ function cancelRun() {
 function resetRun() {
   run = null;
   lastRunCode = null;
+  lastRunDefs = null;
   timeline.clear();
   tests.clearResults();
   editor.setStale(false);
   editor.clearHighlight();
-  editor.setMarkers([]);
+  editor.clearMarkers();
   setStatus('');
   viz.renderEmpty(false);
 }
@@ -242,16 +323,18 @@ async function executeCase(index) {
   const input = parseTestInput(t.input);
   const expected = parseExpected(t.expected);
   const code = editor.getValue();
+  const definitions = editor.getValue('defs');
   if (!input.ok) {
     return { code, expected: expected.value, result: { status: 'INVALID_INPUT', steps: [], error: { type: 'Invalid Input', message: input.error } } };
   }
   running = execute({
-    language: state.language, code, testCase: input.value, maxSteps: state.settings.maxSteps, backend: state.settings.backend,
+    language: state.language, code, definitions, testCase: input.value, maxSteps: state.settings.maxSteps, backend: state.settings.backend,
+    onProgress: (text) => setStatus(text, 'busy'),
   });
   const handle = running;
   const result = await handle.promise;
   if (running === handle) running = null;
-  return { code, expected: expected.value, result };
+  return { code, definitions, expected: expected.value, result };
 }
 
 function recordResult(index, { result, expected }) {
@@ -261,11 +344,15 @@ function recordResult(index, { result, expected }) {
 }
 
 function show(index, outcome) {
-  const { result, expected, code } = outcome;
+  const { result, expected, code, definitions } = outcome;
   run = { language: state.language, caseLabel: `Case ${index + 1}`, expected, result };
   lastRunCode = code;
-  editor.setStale(editor.getValue() !== code);
-  editor.setMarkers(result.diagnostics || []);
+  lastRunDefs = definitions === undefined ? editor.getValue('defs') : definitions;
+  editor.setStale(editor.getValue() !== code || editor.getValue('defs') !== lastRunDefs);
+  const diagnostics = result.diagnostics || [];
+  editor.setMarkers(diagnostics.filter((d) => d.file !== 'definitions'), 'solution');
+  editor.setMarkers(diagnostics.filter((d) => d.file === 'definitions'), 'defs');
+  if (diagnostics.some((d) => d.file === 'definitions')) showTab('defs');
   const exec = result.steps && result.steps.length ? buildExecution(result, code, state.language) : null;
   viz.prepare(exec, run);
   if (exec) {
@@ -332,6 +419,11 @@ window.addEventListener('keydown', (e) => {
 // ------------------------------------------------------------------------------------------ boot
 
 viz.renderEmpty(false);
+renderDefsUi();
+editor.setHoverResolver((ctx) => {
+  const frame = timeline.frame;
+  return frame ? resolveHover(ctx, frame) : null;
+});
 editor.init().then(() => {
   // Monaco swallows Ctrl+Enter; route it to Run.
   if (editor.editor && editor.monaco) {

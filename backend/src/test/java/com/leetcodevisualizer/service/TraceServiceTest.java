@@ -34,6 +34,45 @@ class TraceServiceTest {
         return service.execute("test", new ExecutionRequest("java", code, testCase, maxSteps), () -> false);
     }
 
+    private static ExecutionResult runWithDefinitions(String code, String definitions, Map<String, Object> testCase) {
+        return service.execute("test", new ExecutionRequest("java", code, definitions, testCase, null), () -> false);
+    }
+
+    @Test
+    void definitionsSupplyNodeClassesWithoutShiftingLines() {
+        String defs = """
+                public class Node {
+                    public int val;
+                    public List<Node> children;
+                    public Node() {}
+                    public Node(int _val) { val = _val; }
+                }
+                """;
+        String code = """
+                class Solution {
+                    public int count(Node root) {
+                        if (root == null) return 0;
+                        int total = 1;
+                        for (Node c : root.children) total += count(c);
+                        return total;
+                    }
+                }
+                """;
+        ExecutionResult r = runWithDefinitions(code, defs, Map.of("root", List.of(1, java.util.Arrays.asList((Object) null), 3, 2, 4)));
+        assertEquals(ExecutionStatus.SUCCESS, r.status, () -> String.valueOf(r.error));
+        assertEquals(4L, ((Number) r.output).longValue());
+        // the Node constructors are data, not traced calls, and the solution's own lines are untouched
+        assertTrue(r.steps.stream().noneMatch(s -> "Node".equals(s.function)));
+        assertTrue(r.steps.stream().anyMatch(s -> s.line == 4));
+    }
+
+    @Test
+    void definitionsCompileErrorsAreReportedAgainstTheDefinitionsTab() {
+        ExecutionResult r = runWithDefinitions("class Solution { public int f(int x) { return x; } }", "class Broken { int x = ; }", Map.of("x", 1));
+        assertEquals(ExecutionStatus.COMPILE_ERROR, r.status);
+        assertEquals("definitions", r.diagnostics.get(0).file());
+    }
+
     @Test
     void twoSumProducesArrayMapAndLineSteps() {
         String code = """

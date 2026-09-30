@@ -9,10 +9,16 @@ const KEYWORDS = new Set(('abstract assert boolean break byte case catch char cl
   'protected public return short static strictfp super switch synchronized this throw throws transient try void volatile ' +
   'while var let function typeof in of null true false undefined length size yield async await delete').split(' '));
 
+// Python / C / C++ keywords and common names that are never variables
+const KEYWORDS_EXTRA = new Set(('def elif lambda None True False not and or is pass raise with global nonlocal del self cls ' +
+  'nullptr NULL unsigned signed struct typedef sizeof namespace using template typename auto bool string vector').split(' '));
+for (const k of KEYWORDS_EXTRA) KEYWORDS.add(k);
+
 const IDENT = /[A-Za-z_$][\w$]*/g;
 
 /** Blanks comments and string/char literal contents (same length, so positions still line up). */
-export function maskSource(code) {
+export function maskSource(code, language) {
+  if (language === 'python') return maskPython(code);
   const out = code.split('');
   let i = 0;
   const n = code.length;
@@ -38,11 +44,38 @@ export function maskSource(code) {
   return out.join('');
 }
 
+/** Python: `#` comments, quotes and triple-quoted strings blanked out (same length). */
+function maskPython(code) {
+  const out = code.split('');
+  const n = code.length;
+  let i = 0;
+  const blank = (a, b) => { for (let k = a; k < b && k < n; k++) if (code[k] !== '\n') out[k] = ' '; };
+  while (i < n) {
+    const c = code[i];
+    if (c === '#') {
+      const e = code.indexOf('\n', i);
+      const end = e < 0 ? n : e;
+      blank(i, end);
+      i = end;
+    } else if (c === '"' || c === "'") {
+      const triple = code.startsWith(c.repeat(3), i);
+      const q = triple ? c.repeat(3) : c;
+      let j = i + q.length;
+      while (j < n && !code.startsWith(q, j) && (triple || code[j] !== '\n')) j += code[j] === '\\' ? 2 : 1;
+      blank(i + q.length, j);
+      i = j + q.length;
+    } else {
+      i++;
+    }
+  }
+  return out.join('');
+}
+
 const identsIn = (text) => (text.match(IDENT) || []).filter((w) => !KEYWORDS.has(w));
 
 export function analyzeSource(code, language) {
   const lines = code.split('\n');
-  const masked = maskSource(code);
+  const masked = maskSource(code, language);
   const mlines = masked.split('\n');
 
   // name -> Map(identifier -> uses) for its first / second index position
@@ -98,9 +131,21 @@ export function analyzeSource(code, language) {
     return set;
   }
 
-  // brace matching: line -> last line of the block opened on it
+  // block structure: line -> last line of the block opened on it (braces, or indentation in Python)
   const blockEnd = new Map();
-  {
+  if (language === 'python') {
+    const indent = mlines.map((l) => (l.trim() ? l.match(/^\s*/)[0].replace(/\t/g, '    ').length : -1));
+    for (let i = 0; i < mlines.length; i++) {
+      if (indent[i] < 0 || !/:\s*$/.test(mlines[i])) continue;
+      let end = i;
+      for (let j = i + 1; j < mlines.length; j++) {
+        if (indent[j] < 0) continue;
+        if (indent[j] <= indent[i]) break;
+        end = j;
+      }
+      if (end > i) blockEnd.set(i + 1, end + 1);
+    }
+  } else {
     const stack = [];
     let line = 1;
     for (let i = 0; i < masked.length; i++) {
@@ -116,6 +161,11 @@ export function analyzeSource(code, language) {
 
   function lineKind(lineNo) {
     const t = (mlines[lineNo - 1] || '').trim();
+    if (language === 'python') {
+      if (/^(if|elif)\b/.test(t)) return 'if';
+      if (/^(for|while)\b/.test(t)) return 'loop';
+      return null;
+    }
     if (/^(}\s*)?else\s+if\b/.test(t) || /^if\b/.test(t)) return 'if';
     if (/^(for|while)\b/.test(t)) return 'loop';
     if (/^}\s*while\b/.test(t) || /^do\b/.test(t)) return 'loop';
@@ -125,6 +175,7 @@ export function analyzeSource(code, language) {
   /** Line range of the body controlled by the if/loop on lineNo, when it is a braced block. */
   function bodyRange(lineNo) {
     const end = blockEnd.get(lineNo);
+    if (language === 'python') return end && end > lineNo ? [lineNo + 1, end] : null;
     // `} else {` / `} else if (...)` closes the block but belongs to the other branch
     if (end && end > lineNo) return [lineNo + 1, /^\s*}\s*\S/.test(mlines[end - 1] || '') ? end - 1 : end];
     // unbraced single statement on the next line
@@ -284,7 +335,8 @@ function tokenize(src) {
 
 // ---------------------------------------------------------------------------- per-line operations
 
-const LOOKUP_METHODS = new Set(['get', 'getOrDefault', 'containsKey', 'containsValue', 'contains', 'has', 'peek', 'peekFirst', 'peekLast', 'top', 'first', 'last', 'firstKey', 'lastKey']);
+const LOOKUP_METHODS = new Set(['get', 'getOrDefault', 'containsKey', 'containsValue', 'contains', 'has', 'peek', 'peekFirst', 'peekLast', 'top', 'first', 'last', 'firstKey', 'lastKey',
+  'count', 'find', 'at', 'front', 'back']);
 
 /**
  * Operations performed by one source line, evaluated against the state *before* it ran:
@@ -302,7 +354,7 @@ export function lineOperations(src, lineNo, frame, language) {
   if (isRef(thisRef) && frame.heap[thisRef.ref] && frame.heap[thisRef.ref].fields) {
     for (const [k, v] of Object.entries(frame.heap[thisRef.ref].fields)) if (!(k in locals)) locals[k] = v;
   }
-  const env = { locals, heap: frame.heap, reads: [], intDivision: language === 'java', language };
+  const env = { locals, heap: frame.heap, reads: [], intDivision: language === 'java' || language === 'cpp' || language === 'c', language };
 
   // element reads — skip pure assignment targets (a[i] = x), those are writes shown by the diff
   const reads = [];
@@ -351,7 +403,38 @@ export function lineOperations(src, lineNo, frame, language) {
     if (res) lookups.push({ heapId: target.ref, recv, method, ...res });
   }
 
-  // plain-object dictionaries in JS: seen[x]
+  // dictionaries indexed like arrays (Python d[k], C++ m[k], JS obj[k]): a read unless it is an assignment target
+  const mapIdxRe = /([A-Za-z_$][\w$]*)\s*\[([^\[\]]+)\](\s*(?:[+\-*/%]?=(?!=)|\+\+|--)?)/g;
+  while ((m = mapIdxRe.exec(text))) {
+    if (KEYWORDS.has(m[1]) || /^\s*=$/.test(m[3])) continue;
+    const target = locals[m[1]];
+    const h = isRef(target) && frame.heap[target.ref];
+    if (!h || h.kind !== 'map') continue;
+    const keyStart = m.index + m[0].indexOf('[') + 1;
+    const r = evaluate(raw.slice(keyStart, keyStart + m[2].length), { ...env, reads: [] });
+    if (!r.ok) continue;
+    const res = lookup(h, 'get', r.value, [], env, frame.heap);
+    if (res) lookups.push({ heapId: target.ref, recv: m[1], method: 'get', ...res });
+  }
+
+  // Python membership tests: `x in seen`, `nums[i] not in seen` (single names / simple expressions)
+  if (language === 'python') {
+    const inRe = /([A-Za-z_]\w*(?:\s*\[[^\[\]]+\])*|-?\d+)\s+(?:not\s+)?in\s+([A-Za-z_]\w*)/g;
+    while ((m = inRe.exec(text))) {
+      const before = text.slice(0, m.index);
+      const lastFor = before.lastIndexOf('for ');
+      if (lastFor >= 0 && !/\bif\b/.test(before.slice(lastFor))) continue; // a for-loop header, not a test
+      const target = locals[m[2]];
+      const h = isRef(target) && frame.heap[target.ref];
+      if (!h || !['map', 'set', 'list', 'array', 'deque'].includes(h.kind)) continue;
+      const r = evaluate(raw.slice(m.index, m.index + m[1].length), { ...env, reads: [] });
+      if (!r.ok) continue;
+      const method = h.kind === 'map' || h.kind === 'set' ? 'has' : 'contains';
+      const res = lookup(h, method, r.value, [], env, frame.heap);
+      if (res) lookups.push({ heapId: target.ref, recv: m[2], method, ...res });
+    }
+  }
+
   return { reads, lookups };
 }
 
@@ -379,7 +462,9 @@ function lookup(h, method, key, args, env, heap) {
     const i = key === undefined ? -1 : findKey(keys, key);
     const keyEnc = isRef(key) ? key : encodeScalar(key);
     switch (method) {
-      case 'containsKey': case 'has': return { key: keyEnc, keyIndex: i, result: i >= 0 };
+      case 'containsKey': case 'has': case 'contains': case 'count': return { key: keyEnc, keyIndex: i, result: i >= 0 };
+      case 'find': return { key: keyEnc, keyIndex: i, result: i >= 0, found: i >= 0 };
+      case 'at': return { key: keyEnc, keyIndex: i, result: i >= 0 ? h.entries[i][1] : null, found: i >= 0 };
       case 'get': return { key: keyEnc, keyIndex: i, result: i >= 0 ? h.entries[i][1] : (env.language === 'javascript' ? { u: 1 } : null), found: i >= 0 };
       case 'getOrDefault': {
         if (i >= 0) return { key: keyEnc, keyIndex: i, result: h.entries[i][1], found: true };
@@ -393,11 +478,15 @@ function lookup(h, method, key, args, env, heap) {
     }
   }
   if (h.kind === 'set') {
-    if (!['contains', 'has'].includes(method)) return null;
+    if (!['contains', 'has', 'count', 'find'].includes(method)) return null;
     const i = findKey(h.elems || [], key);
     return { key: isRef(key) ? key : encodeScalar(key), keyIndex: i, result: i >= 0 };
   }
   const elems = h.elems || [];
+  if (h.kind === 'stack' && method === 'top') return elems.length ? { keyIndex: elems.length - 1, result: elems[elems.length - 1] } : null;
+  if (['queue', 'deque'].includes(h.kind) && method === 'back') return elems.length ? { keyIndex: elems.length - 1, result: elems[elems.length - 1] } : null;
+  if (h.kind === 'pq' && method === 'top') return elems.length ? { keyIndex: 0, result: elems[0] } : null;
+  if (['queue', 'deque'].includes(h.kind) && method === 'front') return elems.length ? { keyIndex: 0, result: elems[0] } : null;
   if (['stack'].includes(h.kind) && method === 'peek') return elems.length ? { keyIndex: elems.length - 1, result: elems[elems.length - 1] } : null;
   if (['queue', 'deque', 'pq'].includes(h.kind) && ['peek', 'peekFirst', 'first'].includes(method)) return elems.length ? { keyIndex: 0, result: elems[0] } : null;
   if (h.kind === 'deque' && ['peekLast', 'last'].includes(method)) return elems.length ? { keyIndex: elems.length - 1, result: elems[elems.length - 1] } : null;

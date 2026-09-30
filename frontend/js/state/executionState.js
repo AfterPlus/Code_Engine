@@ -60,6 +60,8 @@ export function buildExecution(result, code, language) {
       ops: { reads: [], lookups: [] },
     };
     const prev = frames[k - 1] || null;
+    frame.prevFrame = prev;
+    frame.language = language;
 
     // ---- calls (for the call tree)
     if (s.event === 'FUNCTION_ENTER' || !calls.has(s.callId)) {
@@ -319,8 +321,11 @@ function dequeModes(raw, src) {
     if (modes.has(id)) continue;
     for (const n of set) {
       const call = (m) => new RegExp(`\\b${n.replace(/\$/g, '\\$')}\\s*\\.\\s*(?:${m})\\s*\\(`).test(text);
+      // Python (append/popleft) and C++ (push_back/pop_front/pop_back/push_front) deques
+      if (call('popleft') || (call('pop_front') && !call('push_front'))) { modes.set(id, 'queue'); break; }
+      if (call('appendleft|push_front|pop_back')) { modes.set(id, 'stack'); break; }
       if (call('push|pop|addFirst|removeFirst')) { modes.set(id, 'stack'); break; }
-      if (call('offer|poll|addLast|pollFirst|add|remove')) { modes.set(id, 'queue'); break; }
+      if (call('offer|poll|addLast|pollFirst|add|remove|append')) { modes.set(id, 'queue'); break; }
     }
   }
   return modes;

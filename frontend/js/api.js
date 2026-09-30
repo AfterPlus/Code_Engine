@@ -1,7 +1,9 @@
-// Execution API. Java goes to the Spring Boot backend; JavaScript runs in a Web Worker. Both resolve to the same
-// normalized result shape.
+// Execution API. Java goes to the Spring Boot backend; JavaScript, Python, C and C++ run in Web Workers in the
+// browser. All of them resolve to the same normalized result shape.
 
 import { runJavaScript } from './runners/jsRunner.js';
+import { runPython } from './runners/pyRunner.js';
+import { runCpp } from './runners/cppRunner.js';
 
 const TERMINAL = new Set(['SUCCESS', 'COMPILE_ERROR', 'RUNTIME_ERROR', 'TIMEOUT', 'MEMORY_LIMIT', 'STEP_LIMIT',
   'SECURITY_VIOLATION', 'INVALID_INPUT', 'CANCELLED', 'INTERNAL_ERROR']);
@@ -13,9 +15,11 @@ export function defaultBackend() {
 /**
  * @returns {{promise: Promise<object>, cancel: () => void}}
  */
-export function execute({ language, code, testCase, maxSteps, backend }) {
-  if (language === 'javascript') return runJavaScript({ code, testCase, maxSteps });
-  return runRemote({ language, code, testCase, maxSteps }, (backend || defaultBackend()).replace(/\/+$/, ''));
+export function execute({ language, code, definitions, testCase, maxSteps, backend, onProgress }) {
+  if (language === 'javascript') return runJavaScript({ code, definitions, testCase, maxSteps });
+  if (language === 'python') return runPython({ code, definitions, testCase, maxSteps, onProgress });
+  if (language === 'cpp' || language === 'c') return runCpp({ language, code, definitions, testCase, maxSteps, onProgress });
+  return runRemote({ language, code, definitions, testCase, maxSteps }, (backend || defaultBackend()).replace(/\/+$/, ''));
 }
 
 function runRemote(request, base) {

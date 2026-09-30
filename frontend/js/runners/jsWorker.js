@@ -3,7 +3,7 @@
  * timeout or cancel, so a runaway program can never freeze the page.
  */
 /* global importScripts, acorn, astring, LCVInstrument, LCVTracer */
-importScripts('../vendor/acorn.js', '../vendor/astring.min.js', './jsInstrumenter.js', './jsTracer.js');
+importScripts('../vendor/acorn.js', '../vendor/astring.min.js', './structures.js', './jsInstrumenter.js', './jsTracer.js');
 
 const post = self.postMessage.bind(self);
 
@@ -13,10 +13,10 @@ for (const name of ['fetch', 'XMLHttpRequest', 'WebSocket', 'EventSource', 'impo
 }
 
 self.onmessage = (event) => {
-  const { code, testCase, maxSteps, timeoutMs } = event.data;
+  const { code, definitions, testCase, maxSteps, timeoutMs } = event.data;
   let result;
   try {
-    result = LCVTracer.runTrace(code, testCase || {}, { acorn, astring, instrumenter: LCVInstrument, maxSteps, timeoutMs });
+    result = LCVTracer.runTrace(code, testCase || {}, { acorn, astring, instrumenter: LCVInstrument, maxSteps, timeoutMs, definitions });
   } catch (e) {
     result = { language: 'javascript', status: 'INTERNAL_ERROR', steps: [], error: { type: 'Internal Error', message: String(e && e.stack || e) } };
   }
