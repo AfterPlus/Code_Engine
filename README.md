@@ -1,4 +1,4 @@
-# LeetCode Visualizer
+# Code Engine
 
 Paste a LeetCode problem, your solution, and a test case. The app **executes the code, records the real program
 state at every step, and turns it into a visual dry run**: arrays with pointers, hash maps, stacks, queues,

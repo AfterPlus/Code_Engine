@@ -14,8 +14,8 @@
     <groupId>com.leetcodevisualizer</groupId>
     <artifactId>leetcode-visualizer</artifactId>
     <version>0.1.0</version>
-    <name>LeetCode Visualizer</name>
-    <description>Execution-tracing backend for the LeetCode Visualizer</description>
+    <name>Code Engine</name>
+    <description>Execution-tracing backend for the Code Engine</description>
 
     <properties>
         <java.version>21</java.version>
