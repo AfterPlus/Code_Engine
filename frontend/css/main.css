@@ -135,16 +135,7 @@ code, .mono { font-family: var(--mono); }
   min-width: 0;
 }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; }
-.brand-mark {
-  width: 22px; height: 22px; border-radius: 6px;
-  background: linear-gradient(135deg, var(--accent), var(--call));
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
-  position: relative;
-}
-.brand-mark::after {
-  content: ''; position: absolute; left: 8px; top: 6px;
-  border-left: 7px solid #fff; border-top: 5px solid transparent; border-bottom: 5px solid transparent;
-}
+.brand-mark { width: 26px; height: 26px; display: block; }
 .topbar-group { display: flex; align-items: center; gap: 10px; }
 .topbar-spacer { flex: 1; }
 
