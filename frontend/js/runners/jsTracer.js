@@ -253,7 +253,7 @@
     className: (n) => (n && n.constructor && n.constructor.name) || '',
   });
 
-  /** JSDoc types as LeetCode writes them: `Node|null`, `?TreeNode`, `_Node` -> the class name. */
+  /** JSDoc types as online-judge templates write them: `Node|null`, `?TreeNode`, `_Node` -> the class name. */
   const normType = (type) => (type || '').replace(/\s+/g, '').replace(/\|null|\|undefined|^\?/g, '').replace(/^_(?=Node$)/, '');
 
   function convertArg(value, type, env) {
@@ -277,7 +277,7 @@
     return value;
   }
 
-  /** LeetCode's linked-list-cycle input: the tail links back to the node at index `pos` (-1: no cycle). */
+  /** The linked-list-cycle input: the tail links back to the node at index `pos` (-1: no cycle). */
   function linkCycle(args, pos) {
     if (typeof pos !== 'number' || pos < 0) return;
     const head = args.find((a) => a && typeof a === 'object' && 'next' in a);
@@ -351,7 +351,7 @@
     return best;
   }
 
-  /** LeetCode's class-design format: ["MinStack","push",...] with [[],[-2],...]. */
+  /** The class-design format: ["MinStack","push",...] with [[],[-2],...]. */
   function designProblem(testCase, fns) {
     const vals = Object.values(testCase || {});
     if (vals.length !== 2) return null;
@@ -517,7 +517,7 @@
       call = () => {
         const ret = fn.apply(self, args);
         if (ret === undefined) result.inPlace = true;
-        if (ret === null && returnsNode) return []; // an empty list/tree prints as [] like LeetCode
+        if (ret === null && returnsNode) return []; // an empty list/tree prints as [] like an online judge
         return toJson(ret === undefined && args.length ? args[0] : ret);
       };
     }

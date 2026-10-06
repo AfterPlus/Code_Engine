@@ -190,7 +190,7 @@ function showTab(tab) {
 }
 tabButtons.forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
 
-/** Definition bar: suggests classes the solution uses but nothing declares, and inserts LeetCode's presets. */
+/** Definition bar: suggests classes the solution uses but nothing declares, and inserts the standard helper-class presets. */
 function renderDefsUi() {
   const lang = state.language;
   const defs = editor.getValue('defs');
@@ -207,14 +207,14 @@ function renderDefsUi() {
   const items = [];
   if (!onDefs) {
     const names = [...new Set(missing.map((id) => PRESET_INFO[id].className))].join(', ');
-    items.push(h('span', { class: 'grow' }, `Uses ${names}, which LeetCode defines for you. `),
+    items.push(h('span', { class: 'grow' }, `Uses ${names}, which online judges normally provide. `),
       h('button', { type: 'button', class: 'btn btn-sm', onclick: () => { missing.forEach(insert); showTab('defs'); } }, 'Add to Definitions'));
   } else {
-    const select = h('select', { 'aria-label': 'Insert a LeetCode definition' },
+    const select = h('select', { 'aria-label': 'Insert a helper-class definition' },
       h('option', { value: '' }, 'Insert definition…'),
       ...Object.entries(PRESET_INFO).filter(([id]) => presetCode(lang, id)).map(([id, info]) => h('option', { value: id }, info.label)));
     select.addEventListener('change', () => { if (select.value) insert(select.value); select.value = ''; });
-    items.push(h('span', { class: 'grow' }, 'Classes LeetCode defines for you. They run before your solution and are not traced.'), select);
+    items.push(h('span', { class: 'grow' }, 'Helper classes online judges normally provide. They run before your solution and are not traced.'), select);
   }
   mount(bar, items);
 }

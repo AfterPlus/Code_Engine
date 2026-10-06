@@ -1,9 +1,9 @@
-// LeetCode ships some classes with the problem (ListNode, TreeNode, Node, ...) and never shows them in the editor.
-// The "Definitions" tab holds them, so the solution can be pasted exactly as it is on LeetCode. The text there is
+// Online judges ship some classes with the problem (ListNode, TreeNode, Node, ...) and never show them in the editor.
+// The "Definitions" tab holds them, so the solution can be pasted exactly as the judge presents it. The text there is
 // compiled/evaluated *before* the solution, is never traced, and never shifts the solution's line numbers.
 //
-// Each preset is one of LeetCode's own class definitions, per language. `kind` tells the test-case parser how a
-// LeetCode-style array is turned into that structure (see the engines' builders).
+// Each preset is one of the standard judge class definitions, per language. `kind` tells the test-case parser how a
+// judge-style array is turned into that structure (see the engines' builders).
 
 const P = {};
 
@@ -356,7 +356,7 @@ function pyMask(code) {
 
 /**
  * The text where type names count as uses. JavaScript keeps its JSDoc (`@param {TreeNode}`, `{_Node}`) and Python keeps
- * its annotation strings (`'Node'`), because that is often the only place LeetCode's templates name the class.
+ * its annotation strings (`'Node'`), because that is often the only place a judge's templates name the class.
  */
 function typeText(lang, code) {
   if (lang === 'python') return code.replace(/#[^\n]*/g, ' ');

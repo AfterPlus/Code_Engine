@@ -1,9 +1,9 @@
-// More LeetCode tree / node problems: BST operations, path problems, N-ary trees, pointers (next / random), graphs.
+// More tree / node problems: BST operations, path problems, N-ary trees, pointers (next / random), graphs.
 // Node classes other than TreeNode / ListNode (Node) come from the Definitions tab presets.
 
 export const TREE_CORPUS_2 = [
   {
-    id: 'search-bst', title: '700. Search in a Binary Search Tree',
+    id: 'search-bst', title: 'Search in a Binary Search Tree',
     tests: [{ input: 'root = [4,2,7,1,3], val = 2', expected: [2, 1, 3] }, { input: 'root = [4,2,7,1,3], val = 5', expected: [] }],
     java: `class Solution {
     public TreeNode searchBST(TreeNode root, int val) {
@@ -46,7 +46,7 @@ public:
 }`,
   },
   {
-    id: 'insert-bst', title: '701. Insert into a Binary Search Tree',
+    id: 'insert-bst', title: 'Insert into a Binary Search Tree',
     tests: [{ input: 'root = [4,2,7,1,3], val = 5', expected: [4, 2, 7, 1, 3, 5] }, { input: 'root = [], val = 5', expected: [5] }],
     java: `class Solution {
     public TreeNode insertIntoBST(TreeNode root, int val) {
@@ -99,7 +99,7 @@ public:
 }`,
   },
   {
-    id: 'merge-trees', title: '617. Merge Two Binary Trees',
+    id: 'merge-trees', title: 'Merge Two Binary Trees',
     tests: [{ input: 'root1 = [1,3,2,5], root2 = [2,1,3,null,4,null,7]', expected: [3, 4, 5, 5, 4, null, 7] }, { input: 'root1 = [1], root2 = [1,2]', expected: [2, 2] }],
     java: `class Solution {
     public TreeNode mergeTrees(TreeNode root1, TreeNode root2) {
@@ -155,7 +155,7 @@ public:
 }`,
   },
   {
-    id: 'min-depth', title: '111. Minimum Depth of Binary Tree',
+    id: 'min-depth', title: 'Minimum Depth of Binary Tree',
     tests: [{ input: 'root = [3,9,20,null,null,15,7]', expected: 2 }, { input: 'root = [2,null,3,null,4,null,5,null,6]', expected: 5 }],
     java: `class Solution {
     public int minDepth(TreeNode root) {
@@ -202,7 +202,7 @@ public:
 }`,
   },
   {
-    id: 'binary-tree-paths', title: '257. Binary Tree Paths',
+    id: 'binary-tree-paths', title: 'Binary Tree Paths',
     tests: [{ input: 'root = [1,2,3,null,5]', expected: ['1->2->5', '1->3'] }, { input: 'root = [1]', expected: ['1'] }],
     java: `class Solution {
     public List<String> binaryTreePaths(TreeNode root) {
@@ -272,7 +272,7 @@ public:
 };`,
   },
   {
-    id: 'max-path-sum', title: '124. Binary Tree Maximum Path Sum',
+    id: 'max-path-sum', title: 'Binary Tree Maximum Path Sum',
     tests: [{ input: 'root = [1,2,3]', expected: 6 }, { input: 'root = [-10,9,20,null,null,15,7]', expected: 42 }],
     java: `class Solution {
     private int best = Integer.MIN_VALUE;
@@ -336,7 +336,7 @@ public:
 };`,
   },
   {
-    id: 'path-sum-iii', title: '437. Path Sum III (prefix sums in a hash map)',
+    id: 'path-sum-iii', title: 'Path Sum III (prefix sums in a hash map)',
     tests: [{ input: 'root = [10,5,-3,3,2,null,11,3,-2,null,1], targetSum = 8', expected: 3 }, { input: 'root = [5,4,8,11,null,13,4,7,2,null,null,5,1], targetSum = 22', expected: 3 }],
     java: `class Solution {
     private Map<Long, Integer> prefix = new HashMap<>();
@@ -407,7 +407,7 @@ public:
 };`,
   },
   {
-    id: 'zigzag', title: '103. Binary Tree Zigzag Level Order Traversal',
+    id: 'zigzag', title: 'Binary Tree Zigzag Level Order Traversal',
     tests: [{ input: 'root = [3,9,20,null,null,15,7]', expected: [[3], [20, 9], [15, 7]] }, { input: 'root = [1]', expected: [[1]] }],
     java: `class Solution {
     public List<List<Integer>> zigzagLevelOrder(TreeNode root) {
@@ -502,7 +502,7 @@ public:
 };`,
   },
   {
-    id: 'sorted-array-to-bst', title: '108. Convert Sorted Array to Binary Search Tree',
+    id: 'sorted-array-to-bst', title: 'Convert Sorted Array to Binary Search Tree',
     tests: [{ input: 'nums = [-10,-3,0,5,9]', expected: [0, -10, 5, null, -3, null, 9] }, { input: 'nums = [1,3]', expected: [1, null, 3] }],
     java: `class Solution {
     public TreeNode sortedArrayToBST(int[] nums) {
@@ -560,7 +560,7 @@ public:
 };`,
   },
   {
-    id: 'two-sum-bst', title: '653. Two Sum IV - Input is a BST',
+    id: 'two-sum-bst', title: 'Two Sum IV - Input is a BST',
     tests: [{ input: 'root = [5,3,6,2,4,null,7], k = 9', expected: true }, { input: 'root = [5,3,6,2,4,null,7], k = 28', expected: false }],
     java: `class Solution {
     public boolean findTarget(TreeNode root, int k) {
@@ -617,7 +617,7 @@ public:
   },
   // ============================================================================ N-ary trees
   {
-    id: 'nary-preorder', title: '589. N-ary Tree Preorder Traversal',
+    id: 'nary-preorder', title: 'N-ary Tree Preorder Traversal',
     tests: [{ input: 'root = [1,null,3,2,4,null,5,6]', expected: [1, 3, 5, 6, 2, 4] }, { input: 'root = [1,null,2,3,4,5,null,null,6,7,null,8,null,9,10,null,null,11,null,12,null,13,null,null,14]', expected: [1, 2, 3, 6, 7, 11, 14, 4, 8, 12, 5, 9, 13, 10] }],
     java: `class Solution {
     public List<Integer> preorder(Node root) {
@@ -672,7 +672,7 @@ public:
 };`,
   },
   {
-    id: 'nary-level-order', title: '429. N-ary Tree Level Order Traversal',
+    id: 'nary-level-order', title: 'N-ary Tree Level Order Traversal',
     tests: [{ input: 'root = [1,null,3,2,4,null,5,6]', expected: [[1], [3, 2, 4], [5, 6]] }],
     java: `class Solution {
     public List<List<Integer>> levelOrder(Node root) {
@@ -744,7 +744,7 @@ public:
 };`,
   },
   {
-    id: 'nary-max-depth', title: '559. Maximum Depth of N-ary Tree',
+    id: 'nary-max-depth', title: 'Maximum Depth of N-ary Tree',
     tests: [{ input: 'root = [1,null,3,2,4,null,5,6]', expected: 3 }],
     java: `class Solution {
     public int maxDepth(Node root) {
@@ -781,7 +781,7 @@ public:
   },
   // ============================================================================ next pointers / random pointers / graphs
   {
-    id: 'populate-next', title: '116. Populating Next Right Pointers in Each Node',
+    id: 'populate-next', title: 'Populating Next Right Pointers in Each Node',
     tests: [{ input: 'root = [1,2,3,4,5,6,7]', expected: [1, '#', 2, 3, '#', 4, 5, 6, 7, '#'] }],
     java: `class Solution {
     public Node connect(Node root) {
@@ -839,7 +839,7 @@ public:
 };`,
   },
   {
-    id: 'copy-random-list', title: '138. Copy List with Random Pointer',
+    id: 'copy-random-list', title: 'Copy List with Random Pointer',
     tests: [{ input: 'head = [[7,null],[13,0],[11,4],[10,2],[1,0]]', expected: [[7, null], [13, 0], [11, 4], [10, 2], [1, 0]] }, { input: 'head = [[1,1],[2,1]]', expected: [[1, 1], [2, 1]] }],
     java: `class Solution {
     public Node copyRandomList(Node head) {
@@ -892,7 +892,7 @@ public:
 };`,
   },
   {
-    id: 'clone-graph', title: '133. Clone Graph',
+    id: 'clone-graph', title: 'Clone Graph',
     tests: [{ input: 'node = [[2,4],[1,3],[2,4],[1,3]]', expected: [[2, 4], [1, 3], [2, 4], [1, 3]] }, { input: 'node = [[]]', expected: [[]] }],
     java: `class Solution {
     private Map<Node, Node> copies = new HashMap<>();
@@ -950,7 +950,7 @@ public:
 };`,
   },
   {
-    id: 'bst-iterator', title: '173. Binary Search Tree Iterator (class design)',
+    id: 'bst-iterator', title: 'Binary Search Tree Iterator (class design)',
     tests: [{ input: '["BSTIterator","next","next","hasNext","next","hasNext","next","hasNext"]\n[[[7,3,15,null,null,9,20]],[],[],[],[],[],[],[]]', expected: [null, 3, 7, true, 9, true, 15, true] }],
     java: `class BSTIterator {
     private Deque<TreeNode> stack = new ArrayDeque<>();
@@ -1049,7 +1049,7 @@ public:
 };`,
   },
   {
-    id: 'reverse-list', title: '206. Reverse Linked List',
+    id: 'reverse-list', title: 'Reverse Linked List',
     tests: [{ input: 'head = [1,2,3,4,5]', expected: [5, 4, 3, 2, 1] }, { input: 'head = [1,2]', expected: [2, 1] }, { input: 'head = []', expected: [] }],
     java: `class Solution {
     public ListNode reverseList(ListNode head) {

@@ -1,5 +1,5 @@
 // Python, C++ and C versions of the built-in examples (samples.js has Java and JavaScript), and a few tree examples
-// that show off the Definitions tab (TreeNode / Node classes LeetCode defines for you).
+// that show off the Definitions tab (the TreeNode / Node helper classes online judges usually provide).
 
 export const EXTRA = {
   'two-sum': {
@@ -430,11 +430,11 @@ public:
 export const TREE_SAMPLES = [
   {
     id: 'max-depth',
-    title: '104. Maximum Depth of Binary Tree',
+    title: 'Height of a Binary Tree',
     shows: 'tree recursion, Definitions tab',
-    problem: `Given the root of a binary tree, return its maximum depth: the number of nodes along the longest path from the root down to the farthest leaf.
+    problem: `Return the height of a binary tree: how many nodes lie on its longest path from the root down to a leaf.
 
-The TreeNode class is defined for you by LeetCode; here it lives in the Definitions tab.
+The TreeNode class is a helper that online judges usually provide; here it lives in the Definitions tab.
 
 Example: root = [3,9,20,null,null,15,7]  →  3`,
     java: `class Solution {
@@ -486,9 +486,9 @@ public:
   },
   {
     id: 'invert-tree',
-    title: '226. Invert Binary Tree',
+    title: 'Mirror a Binary Tree',
     shows: 'tree, pointer swaps',
-    problem: `Given the root of a binary tree, invert the tree, and return its root.
+    problem: `Mirror a binary tree by swapping the left and right child of every node, then return the root.
 
 Example: root = [4,2,7,1,3,6,9]  →  [4,7,2,9,6,3,1]`,
     java: `class Solution {
@@ -543,11 +543,11 @@ public:
   },
   {
     id: 'nary-level-order',
-    title: '429. N-ary Tree Level Order Traversal',
+    title: 'Level Order of an N-ary Tree',
     shows: 'N-ary tree, custom Node class',
-    problem: `Given an n-ary tree, return the level order traversal of its nodes' values.
+    problem: `Return the values of an n-ary tree one level at a time.
 
-The Node class (with a children list) is defined for you by LeetCode; open the Definitions tab to see it. Test input uses LeetCode's n-ary serialization: each group of children ends with null.
+The Node class (with a list of children) is a helper that online judges usually provide; open the Definitions tab to see it. The test input uses the usual n-ary serialization: each group of children ends with null.
 
 Example: root = [1,null,3,2,4,null,5,6]  →  [[1],[3,2,4],[5,6]]`,
     java: `class Solution {

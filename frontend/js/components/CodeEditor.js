@@ -1,6 +1,6 @@
 // Code editor: Monaco from the CDN, with a plain textarea fallback so the app still works offline.
 // Highlights the line about to run (▶), the line that just ran (●), and the failing line (✕).
-// Two documents share the editor: the solution, and the definitions (LeetCode's Node classes) that run before it.
+// Two documents share the editor: the solution, and the definitions (the judge-supplied Node classes) that run before it.
 // Hovering a name in the solution shows its value at the current step (see setHoverResolver).
 
 import { h, mount } from '../util/dom.js';

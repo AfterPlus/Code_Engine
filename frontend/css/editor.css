@@ -12,7 +12,7 @@
 .editor-card { flex: 1 1 auto; min-height: 220px; }
 .editor-host { flex: 1; min-height: 0; position: relative; border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; }
 
-/* file tabs: the solution and the definitions LeetCode ships with the problem */
+/* file tabs: the solution and the helper classes an online judge normally supplies */
 .editor-head { padding-top: 0; padding-bottom: 0; }
 .editor-tabs { display: flex; gap: 2px; align-self: stretch; align-items: flex-end; }
 .editor-tab {

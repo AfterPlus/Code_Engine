@@ -1,13 +1,13 @@
 // Test cases: add / delete / select, input + expected output, and the actual output with pass/fail after a run.
-// Inputs accept JSON ({"nums": [2,7], "target": 9}) or LeetCode's own format (nums = [2,7], target = 9).
+// Inputs accept JSON ({"nums": [2,7], "target": 9}) or the common online-judge format (nums = [2,7], target = 9).
 
 import { h, mount } from '../util/dom.js';
 
 /**
  * Parses a test-case input. Returns {ok, value} or {ok: false, error}. Accepted:
  *  - a JSON object of named arguments          {"nums": [2,7], "target": 9}
- *  - LeetCode's example format                 nums = [2,7], target = 9   (an "Input:" label is ignored)
- *  - LeetCode's raw test-case format           one JSON value per line, in parameter order
+ *  - the judge's example format                nums = [2,7], target = 9   (an "Input:" label is ignored)
+ *  - the judge's raw test-case format          one JSON value per line, in parameter order
  * Positional values get keys $1, $2, ... which the runners match to parameters in order.
  */
 export function parseTestInput(text) {
@@ -21,7 +21,7 @@ export function parseTestInput(text) {
     if (v && typeof v === 'object' && !Array.isArray(v)) return { ok: true, value: v };
     return { ok: true, value: { $1: v } };
   } catch (e) {
-    // LeetCode style: name = value, name = value (values are JSON)
+    // online-judge style: name = value, name = value (values are JSON)
     const re = /(?:^|[,\n])\s*([A-Za-z_$][\w$]*)\s*=\s*/g;
     const marks = [];
     let m;
@@ -41,7 +41,7 @@ export function parseTestInput(text) {
   }
 }
 
-/** One JSON value per non-empty line (LeetCode's raw test-case box), or null if it isn't that format. */
+/** One JSON value per non-empty line (an online judge's raw test-case box), or null if it isn't that format. */
 function parsePositional(t) {
   const lines = t.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   if (lines.length < 2) return null;
