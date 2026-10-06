@@ -1,9 +1,9 @@
-package com.leetcodevisualizer.instrumentation;
+package com.codeengine.instrumentation;
 
-import com.leetcodevisualizer.model.ExecutionStep;
-import com.leetcodevisualizer.model.HeapObject;
-import com.leetcodevisualizer.model.StackFrame;
-import com.leetcodevisualizer.security.ResourceLimiter;
+import com.codeengine.model.ExecutionStep;
+import com.codeengine.model.HeapObject;
+import com.codeengine.model.StackFrame;
+import com.codeengine.security.ResourceLimiter;
 import com.sun.jdi.*;
 import com.sun.jdi.event.*;
 import com.sun.jdi.request.*;

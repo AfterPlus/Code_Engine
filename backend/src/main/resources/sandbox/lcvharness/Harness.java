@@ -23,7 +23,7 @@ import java.util.*;
  * solution between {@link #begin()} and {@link #end()} (the debugger only traces between those two
  * breakpoints), and reports the outcome on the real stdout behind a marker line.
  *
- * <p>Supported inputs, as LeetCode itself accepts them:
+ * <p>Supported inputs, as online judges accept them:
  * <ul>
  *   <li>named arguments ({@code nums = [...], target = 9}) or positional ones (raw one-value-per-line input);</li>
  *   <li>class-design problems: {@code ["MinStack","push","getMin"]} with {@code [[],[-2],[]]};</li>
@@ -276,7 +276,7 @@ public final class Harness {
         return new Converted(out, spare.size());
     }
 
-    /** LeetCode's linked-list-cycle input: the tail links back to the node at index {@code pos} (-1: no cycle). */
+    /** The linked-list-cycle input: the tail links back to the node at index {@code pos} (-1: no cycle). */
     private static void linkCycle(Object[] params, Object pos) {
         int p = num(pos).intValue();
         if (p < 0) return;
@@ -306,7 +306,7 @@ public final class Harness {
     // ---------------------------------------------------------------- class-design problems
 
     /**
-     * Recognizes LeetCode's design format: a list of operations whose first entry names a class of the
+     * Recognizes the usual class-design format: a list of operations whose first entry names a class of the
      * solution, and a parallel list of argument lists.
      */
     private static Map<String, Object> designProblem(Map<String, Object> args) {
@@ -559,7 +559,7 @@ public final class Harness {
         }
     }
 
-    /** Numbers default to Integer when they fit, like LeetCode's own deserializer. */
+    /** Numbers default to Integer when they fit, like the usual judge deserializers. */
     private static Object normalize(Object json) {
         if (json instanceof Long l && l >= Integer.MIN_VALUE && l <= Integer.MAX_VALUE) return l.intValue();
         if (json instanceof List<?> list) {
@@ -623,7 +623,7 @@ public final class Harness {
         }
     }
 
-    /** LeetCode level-order encoding, e.g. [3,9,20,null,null,15,7]. */
+    /** Level-order encoding, e.g. [3,9,20,null,null,15,7]. */
     private static Object buildTree(Class<?> c, List<?> values) {
         if (values.isEmpty() || values.get(0) == null) return null;
         try {
@@ -752,7 +752,7 @@ public final class Harness {
         }
     }
 
-    /** LeetCode's graph encoding: node i (value i+1) has the neighbors adjacency[i]. */
+    /** The usual graph encoding: node i (value i+1) has the neighbors adjacency[i]. */
     private static Object buildGraph(Class<?> c, List<?> adjacency) {
         if (adjacency.isEmpty()) return null;
         try {

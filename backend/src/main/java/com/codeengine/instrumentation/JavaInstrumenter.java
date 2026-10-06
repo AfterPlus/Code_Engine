@@ -1,4 +1,4 @@
-package com.leetcodevisualizer.instrumentation;
+package com.codeengine.instrumentation;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Prepares user source for compilation the way LeetCode does: default imports, an implicit
+ * Prepares user source for compilation the way online judges do: default imports, an implicit
  * {@code class Solution} wrapper when only a method was pasted, and the standard {@code ListNode}/{@code TreeNode}
  * types when they are used but not declared.
  *
@@ -49,7 +49,7 @@ public final class JavaInstrumenter {
             "(?m)^(\\s*)public\\s+(?=(?:final\\s+|abstract\\s+)*(?:class|interface|enum|record)\\b)");
 
     /**
-     * @param definitions classes LeetCode supplies (TreeNode, ListNode, Node...), compiled as their own unit and
+     * @param definitions classes the judge supplies (TreeNode, ListNode, Node...), compiled as their own unit and
      *                    reported as injected (data, never traced); null or blank when there are none
      */
     public PreparedSource prepare(String code, String definitions) {

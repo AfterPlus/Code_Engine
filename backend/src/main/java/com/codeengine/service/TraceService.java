@@ -1,15 +1,15 @@
-package com.leetcodevisualizer.service;
+package com.codeengine.service;
 
-import com.leetcodevisualizer.instrumentation.JavaInstrumenter;
-import com.leetcodevisualizer.instrumentation.TraceCollector;
-import com.leetcodevisualizer.model.ExecutionRequest;
-import com.leetcodevisualizer.model.ExecutionResult;
-import com.leetcodevisualizer.model.ExecutionResult.ExecutionError;
-import com.leetcodevisualizer.model.ExecutionStatus;
-import com.leetcodevisualizer.model.ExecutionStep;
-import com.leetcodevisualizer.security.ResourceLimiter;
-import com.leetcodevisualizer.security.SandboxPolicy;
-import com.leetcodevisualizer.util.Json;
+import com.codeengine.instrumentation.JavaInstrumenter;
+import com.codeengine.instrumentation.TraceCollector;
+import com.codeengine.model.ExecutionRequest;
+import com.codeengine.model.ExecutionResult;
+import com.codeengine.model.ExecutionResult.ExecutionError;
+import com.codeengine.model.ExecutionStatus;
+import com.codeengine.model.ExecutionStep;
+import com.codeengine.security.ResourceLimiter;
+import com.codeengine.security.SandboxPolicy;
+import com.codeengine.util.Json;
 import org.springframework.stereotype.Service;
 
 import javax.tools.Diagnostic;
@@ -67,7 +67,7 @@ public class TraceService {
             long deadline = started + limits.timeoutMs() * 1_000_000L;
 
             try (SandboxService.SandboxProcess proc = sandbox.launch(work, classes)) {
-                // Injected LeetCode helper types are shown as data, not traced as calls (like library code).
+                // Injected judge helper types are shown as data, not traced as calls (like library code).
                 List<String> traced = userClasses.stream().filter(c -> !src.injected().contains(c)).toList();
                 TraceCollector collector = new TraceCollector(proc.vm, traced, limits, maxSteps, braceOnlyLines(req.code()));
                 TraceCollector.Outcome outcome = collector.run(deadline, cancelled);

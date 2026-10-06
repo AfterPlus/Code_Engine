@@ -1,4 +1,4 @@
-package com.leetcodevisualizer.model;
+package com.codeengine.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

@@ -1,8 +1,8 @@
-package com.leetcodevisualizer.controller;
+package com.codeengine.controller;
 
-import com.leetcodevisualizer.model.ExecutionRequest;
-import com.leetcodevisualizer.model.ExecutionResult;
-import com.leetcodevisualizer.service.ExecutionService;
+import com.codeengine.model.ExecutionRequest;
+import com.codeengine.model.ExecutionResult;
+import com.codeengine.service.ExecutionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

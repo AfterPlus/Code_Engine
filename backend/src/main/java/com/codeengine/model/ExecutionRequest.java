@@ -1,4 +1,4 @@
-package com.leetcodevisualizer.model;
+package com.codeengine.model;
 
 import java.util.Map;
 
@@ -7,7 +7,7 @@ import java.util.Map;
  *
  * @param language     "java" (JavaScript, Python, C and C++ are traced client-side and never reach the server)
  * @param code         the user's solution source
- * @param definitions  optional classes LeetCode defines for the problem (TreeNode, ListNode, Node...); compiled with the
+ * @param definitions  optional helper classes the judge defines for the problem (TreeNode, ListNode, Node...); compiled with the
  *                     solution but never traced, and they never shift the solution's line numbers
  * @param testCase     named arguments, e.g. {"nums": [2,7,11,15], "target": 9}; matched to parameter names
  * @param maxSteps     optional lower step cap; clamped to the server maximum

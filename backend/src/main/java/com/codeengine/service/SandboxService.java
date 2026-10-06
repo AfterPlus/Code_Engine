@@ -1,6 +1,6 @@
-package com.leetcodevisualizer.service;
+package com.codeengine.service;
 
-import com.leetcodevisualizer.security.ResourceLimiter;
+import com.codeengine.security.ResourceLimiter;
 import com.sun.jdi.Bootstrap;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.Connector;

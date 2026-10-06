@@ -11,8 +11,8 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.leetcodevisualizer</groupId>
-    <artifactId>leetcode-visualizer</artifactId>
+    <groupId>com.codeengine</groupId>
+    <artifactId>code-engine</artifactId>
     <version>0.1.0</version>
     <name>Code Engine</name>
     <description>Execution-tracing backend for the Code Engine</description>

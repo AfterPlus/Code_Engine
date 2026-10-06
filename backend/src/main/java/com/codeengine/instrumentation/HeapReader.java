@@ -1,7 +1,7 @@
-package com.leetcodevisualizer.instrumentation;
+package com.codeengine.instrumentation;
 
-import com.leetcodevisualizer.model.HeapObject;
-import com.leetcodevisualizer.security.ResourceLimiter;
+import com.codeengine.model.HeapObject;
+import com.codeengine.security.ResourceLimiter;
 import com.sun.jdi.*;
 
 import java.nio.charset.StandardCharsets;

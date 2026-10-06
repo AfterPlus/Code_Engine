@@ -1,8 +1,8 @@
-# LeetCode Visualizer — Project Specification
+# Code Engine — Project Specification
 
 ## 1. Project Vision
 
-Build a web application that turns a user's **LeetCode problem + solution code + test cases** into an interactive, step-by-step visual execution.
+Build a web application that turns a user's **coding problem + solution code + test cases** into an interactive, step-by-step visual execution.
 
 The core idea is:
 
@@ -22,7 +22,7 @@ The screen should have two major areas.
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ LeetCode Visualizer                                      ▶ Run   ⚙ Settings │
+│ Code Engine                                              ▶ Run   ⚙ Settings │
 ├──────────────────────────────┬──────────────────────────────────────────────┤
 │                              │                                              │
 │ PROBLEM                      │              VISUALIZATION                    │
@@ -54,7 +54,7 @@ The left side contains three primary sections.
 
 A text editor/viewer where the user can paste:
 
-- LeetCode problem statement
+- Problem statement
 - Constraints
 - Examples
 - Notes
@@ -634,7 +634,7 @@ The visual state and source code must stay synchronized.
 
 # 20. Generic Execution Event Model
 
-Do NOT make the visualizer depend on hard-coded LeetCode patterns.
+Do NOT make the visualizer depend on hard-coded problem patterns.
 
 Instead, define a generic event model.
 
@@ -877,7 +877,7 @@ frontend/
 ```text
 backend/
 ├── src/main/java/
-│   └── com/leetcodevisualizer/
+│   └── com/codeengine/
 │       ├── controller/
 │       │   └── ExecutionController.java
 │       │
@@ -1190,7 +1190,7 @@ If an error occurs after several successful steps, the user should still be able
 
 ## Principle 1 — Code is the source of truth
 
-Do not create a different hand-written visualizer for every LeetCode problem.
+Do not create a different hand-written visualizer for every problem.
 
 ## Principle 2 — Runtime state drives visuals
 
@@ -1473,7 +1473,7 @@ This order validates the generic execution architecture before the project becom
 The MVP is successful if a user can:
 
 1. Open the website.
-2. Paste a LeetCode problem.
+2. Paste a coding problem.
 3. Paste Java solution code.
 4. Enter a test case.
 5. Click Run.
@@ -1496,7 +1496,7 @@ The system should feel like:
 ```text
 Debugger
       +
-LeetCode
+Problem 
       +
 Algorithm Visualizer
       +
@@ -1540,7 +1540,7 @@ Eventually the application should support a "Universal Code Visualization" model
                     Interactive UI
 ```
 
-This architecture allows the product to grow from a LeetCode visualizer into a general-purpose **code execution visualization and learning platform**.
+This architecture allows the product to grow from a code visualizer into a general-purpose **code execution visualization and learning platform**.
 
 ---
 

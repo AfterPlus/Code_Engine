@@ -1,11 +1,11 @@
-package com.leetcodevisualizer.service;
+package com.codeengine.service;
 
-import com.leetcodevisualizer.model.ExecutionRequest;
-import com.leetcodevisualizer.model.ExecutionResult;
-import com.leetcodevisualizer.model.ExecutionStatus;
-import com.leetcodevisualizer.model.ExecutionStep;
-import com.leetcodevisualizer.model.HeapObject;
-import com.leetcodevisualizer.security.ResourceLimiter;
+import com.codeengine.model.ExecutionRequest;
+import com.codeengine.model.ExecutionResult;
+import com.codeengine.model.ExecutionStatus;
+import com.codeengine.model.ExecutionStep;
+import com.codeengine.model.HeapObject;
+import com.codeengine.security.ResourceLimiter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 

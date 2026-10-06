@@ -1,8 +1,8 @@
-package com.leetcodevisualizer.service;
+package com.codeengine.service;
 
-import com.leetcodevisualizer.model.ExecutionRequest;
-import com.leetcodevisualizer.model.ExecutionResult;
-import com.leetcodevisualizer.model.ExecutionStatus;
+import com.codeengine.model.ExecutionRequest;
+import com.codeengine.model.ExecutionResult;
+import com.codeengine.model.ExecutionStatus;
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
