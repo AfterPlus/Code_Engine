@@ -8,6 +8,10 @@
 //   status   expected status when the run is supposed to fail
 //   stdout   expected printed text (per language)
 
+import { SAMPLES } from '../js/samples.js';
+
+const MIN_COST_CUT = SAMPLES.find((s) => s.id === 'min-cost-cut');
+
 export const CORPUS = [
   // ============================================================================ arrays & hashing
   {
@@ -1652,6 +1656,16 @@ var rightSideView = function(root) {
 };`,
     tests: [{ input: 'm = 3, n = 4', expected: 10 }],
     views: ['matrix'], events: ['ARRAY_WRITE'],
+  },
+  {
+    // the built-in example: memoized interval DP whose table is allocated far bigger than it is used; the dependency
+    // caption has to come from the sub-problem calls (the cell's own line reads no other cell of the table)
+    id: 'min-cost-cut', category: 'DP 2D', title: '1547. Minimum Cost to Cut a Stick (memoized recursion, oversized table)',
+    java: MIN_COST_CUT.java,
+    javascript: MIN_COST_CUT.javascript,
+    tests: [{ input: 'n = 7, cuts = [1,3,4,5]', expected: 16 }, { input: 'n = 9, cuts = [5,6,1,4,2]', expected: 22 }],
+    views: ['matrix'], events: ['ARRAY_WRITE'], recursive: true,
+    dependency: /dp\[\d+\]\[\d+\] = \d+ {2}← (this\.)?dp\[\d+\]\[\d+\], (this\.)?dp\[\d+\]\[\d+\]/,
   },
   {
     id: 'house-robber', category: 'DP 1D', title: '198. House Robber (rolling variables)',

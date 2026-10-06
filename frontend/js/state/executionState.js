@@ -391,6 +391,19 @@ export function referrerName(frame, id) {
   }
   for (const [n, v] of Object.entries(frame.globals || {})) if (isRef(v) && v.ref === id) return n;
   for (const f of frame.stack) for (const [n, v] of Object.entries(f.locals)) if (isRef(v) && v.ref === id) return n;
+  return rowName(frame, id);
+}
+
+/** "dp[3]" for a row of a table that a variable points at: a row has no variable of its own to be named by. */
+function rowName(frame, id) {
+  const holders = [...Object.entries(frame.top.locals), ...Object.entries(frame.globals || {})];
+  const self = frame.top.locals.this;
+  if (isRef(self) && frame.heap[self.ref]?.fields) holders.push(...Object.entries(frame.heap[self.ref].fields).map(([n, v]) => ['this.' + n, v]));
+  for (const [n, v] of holders) {
+    const holder = isRef(v) ? frame.heap[v.ref] : null;
+    const at = holder && holder.elems ? holder.elems.findIndex((e) => isRef(e) && e.ref === id) : -1;
+    if (at >= 0) return `${n}[${at}]`;
+  }
   return null;
 }
 

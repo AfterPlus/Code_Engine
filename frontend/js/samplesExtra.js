@@ -328,6 +328,43 @@ public:
 };
 `,
   },
+  'min-cost-cut': {
+    python: `class Solution:
+    def minCost(self, n: int, cuts: List[int]) -> int:
+        cuts = sorted(cuts + [0, n])
+        dp = [[0] * 20 for _ in range(20)]
+
+        def dfs(i, j):
+            if j - i <= 1:
+                return 0
+            if not dp[i][j]:
+                dp[i][j] = float('inf')
+                for k in range(i + 1, j):
+                    dp[i][j] = min(dp[i][j], cuts[j] - cuts[i] + dfs(i, k) + dfs(k, j))
+            return dp[i][j]
+
+        return dfs(0, len(cuts) - 1)
+`,
+    cpp: `int dp[102][102] = {};
+int dfs(vector<int>& cuts, int i, int j) {
+    if (j - i <= 1)
+        return 0;
+    if (!dp[i][j]) {
+        dp[i][j] = INT_MAX;
+        for (auto k = i + 1; k < j; ++k)
+            dp[i][j] = min(dp[i][j],
+                cuts[j] - cuts[i] + dfs(cuts, i, k) + dfs(cuts, k, j));
+    }
+    return dp[i][j];
+}
+int minCost(int n, vector<int>& cuts) {
+    cuts.push_back(0);
+    cuts.push_back(n);
+    sort(begin(cuts), end(cuts));
+    return dfs(cuts, 0, cuts.size() - 1);
+}
+`,
+  },
   'valid-parentheses': {
     python: `class Solution:
     def isValid(self, s: str) -> bool:

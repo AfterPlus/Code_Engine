@@ -402,6 +402,63 @@ var longestCommonSubsequence = function(text1, text2) {
     tests: [{ input: 'text1 = "abcde", text2 = "ace"', expected: '3' }, { input: 'text1 = "abc", text2 = "def"', expected: '0' }],
   },
   {
+    id: 'min-cost-cut',
+    title: '1547. Minimum Cost to Cut a Stick',
+    shows: 'memoized interval DP, big table, call tree',
+    problem: `Given a wooden stick of length n units (labelled 0 to n) and an array cuts, where cuts[i] is a position to cut at, return the minimum total cost of all the cuts. One cut costs the length of the stick it is made on, and you may perform the cuts in any order.
+
+Example: n = 7, cuts = [1,3,4,5]  →  16
+
+The memo table is allocated for the worst case (102 × 102 here; 20 × 20 in the JavaScript and Python versions, so the setup stays short) but only a small triangle of it is ever used: the view crops to that part, shows which sub-problems each cell is built from, and the call tree marks calls that repeat an earlier one.`,
+    java: `class Solution {
+    int[][] dp = new int[102][102];
+
+    int dfs(int[] cuts, int i, int j) {
+        if (j - i <= 1)
+            return 0;
+        if (dp[i][j] == 0) {
+            dp[i][j] = Integer.MAX_VALUE;
+            for (int k = i + 1; k < j; ++k)
+                dp[i][j] = Math.min(dp[i][j], cuts[j] - cuts[i] + dfs(cuts, i, k) + dfs(cuts, k, j));
+        }
+        return dp[i][j];
+    }
+
+    public int minCost(int n, int[] cuts) {
+        int[] all = new int[cuts.length + 2];
+        for (int i = 0; i < cuts.length; i++) all[i] = cuts[i];
+        all[cuts.length] = 0;
+        all[cuts.length + 1] = n;
+        Arrays.sort(all);
+        return dfs(all, 0, all.length - 1);
+    }
+}
+`,
+    javascript: `/**
+ * @param {number} n
+ * @param {number[]} cuts
+ * @return {number}
+ */
+var minCost = function(n, cuts) {
+    const dp = Array.from({ length: 20 }, () => new Array(20).fill(0));
+    const dfs = (i, j) => {
+        if (j - i <= 1) return 0;
+        if (!dp[i][j]) {
+            dp[i][j] = Infinity;
+            for (let k = i + 1; k < j; k++) {
+                dp[i][j] = Math.min(dp[i][j], cuts[j] - cuts[i] + dfs(i, k) + dfs(k, j));
+            }
+        }
+        return dp[i][j];
+    };
+    cuts.push(0, n);
+    cuts.sort((a, b) => a - b);
+    return dfs(0, cuts.length - 1);
+};
+`,
+    tests: [{ input: 'n = 7, cuts = [1,3,4,5]', expected: '16' }, { input: 'n = 9, cuts = [5,6,1,4,2]', expected: '22' }],
+  },
+  {
     id: 'valid-parentheses',
     title: '20. Valid Parentheses',
     shows: 'stack push / pop',

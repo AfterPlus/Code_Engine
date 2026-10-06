@@ -18,6 +18,7 @@ import { renderCallStack } from '../visualizers/CallStackVisualizer.js';
 import { renderCallTree } from '../visualizers/RecursionVisualizer.js';
 import { renderHeap } from '../visualizers/HeapVisualizer.js';
 import { renderConsole, STATUS_TEXT } from './ConsolePanel.js';
+import { PanZoom } from './PanZoom.js';
 
 const RENDERERS = {
   array: renderArray,
@@ -58,6 +59,14 @@ export class VisualizationPanel {
       return b;
     }));
     mount(dock, tabs, this.panel);
+    // The stage is [notes, body]: error cards stay put above a pan/zoom surface whose position and zoom survive
+    // every step, because a frame only swaps the surface's content.
+    this.stageNotes = h('div', { class: 'stage-notes' });
+    this.stageBody = h('div', { class: 'stage-body' });
+    mount(stage, this.stageNotes, this.stageBody);
+    this.stagePZ = new PanZoom({ label: 'Data structures' });
+    this.treeStagePZ = new PanZoom({ follow: true, label: 'Call tree' });
+    this.dockTreePZ = new PanZoom({ follow: true, label: 'Call tree' });
     this.state = {};
     this.renderEmpty();
   }
@@ -71,6 +80,7 @@ export class VisualizationPanel {
   /** Called once per run: pick a sensible default tab (Call Tree for recursive code, Console for failures). */
   prepare(exec, run) {
     this.state = { exec, run, frame: exec ? exec.frames[0] : null };
+    for (const pz of [this.stagePZ, this.treeStagePZ, this.dockTreePZ]) pz.reset();
     if (!this.userPickedTab) {
       if (!exec || !exec.frames.length) this.setTab('console');
       // recursive code: the call tree goes in the dock, unless the stage already shows it (no structures)
@@ -95,7 +105,8 @@ export class VisualizationPanel {
   renderEmpty(running = false, language = null) {
     this.state = {};
     mount(this.stepbarEl, h('div', { class: 'meta' }, running ? 'Tracing…' : 'Ready'));
-    mount(this.stageEl, h('div', { class: 'stage-empty' },
+    mount(this.stageNotes);
+    mount(this.stageBody, h('div', { class: 'stage-empty' },
       running ? h('div', { class: 'spinner' }) : null,
       h('div', { class: 'big' }, running ? (language === 'java' ? 'Compiling and tracing in a sandboxed JVM…' : 'Tracing in a sandboxed worker…') : 'Paste a solution and press Run'),
       running ? null : h('div', null, 'Every executed line becomes a frame you can step through. ',
@@ -132,41 +143,39 @@ export class VisualizationPanel {
   renderStage() {
     const { frame, exec, run } = this.state;
     const result = run && run.result;
-    const children = [];
+    const notes = [];
     const err = result && result.error;
     const failed = result && result.status !== 'SUCCESS';
     const atEnd = frame && exec && frame.index === exec.frames.length - 1;
     if (failed && err && (!frame || atEnd || frame.rawEvent === 'EXCEPTION')) {
       const where = [err.line ? `Line ${err.line}` : null, err.function ? `${err.function}()` : null].filter(Boolean).join(' · ');
-      children.push(h('div', { class: 'error-card', role: 'alert' },
+      notes.push(h('div', { class: 'error-card', role: 'alert' },
         h('div', { class: 'error-title' }, STATUS_TEXT[result.status] || result.status, where ? h('small', null, where) : null),
         h('pre', null, [err.type && err.type !== STATUS_TEXT[result.status] ? err.type + '\n' : '', err.message || ''].join('')),
         frame ? h('pre', null, h('span', { style: { color: 'var(--muted)' } }, 'Earlier frames are still inspectable — use ← or the timeline.')) : null));
     }
-    if (frame) {
-      const views = detectViews(frame, this.overrides || {}, exec);
-      const prev = exec.frames[frame.index - 1] || null;
-      const ctx = { frame, prev, exec, onMode: this.onMode };
-      const nodes = views.map((v) => {
-        const fn = RENDERERS[v.kind];
-        try {
-          return fn ? fn(v, ctx) : null;
-        } catch (e) {
-          console.error('visualizer failed', v, e);
-          return null;
-        }
-      }).filter(Boolean);
-      if (nodes.length) children.push(h('div', { class: 'views' }, nodes));
-      else if (exec.recursive) {
-        // Pure recursion (fib, permutations of indices...): the call tree *is* the data structure.
-        const host = h('div', { class: 'calltree-stage' });
-        children.push(host);
-        mount(this.stageEl, children);
-        renderCallTree(host, frame, exec);
-        return;
-      } else if (!children.length) children.push(h('div', { class: 'stage-empty' }, h('div', { class: 'big' }, 'No data structures in scope'), 'Scalar variables are listed under Variables below.'));
+    mount(this.stageNotes, notes);
+    if (!frame) {
+      mount(this.stageBody);
+      return;
     }
-    mount(this.stageEl, children);
+    const views = detectViews(frame, this.overrides || {}, exec);
+    const prev = exec.frames[frame.index - 1] || null;
+    const ctx = { frame, prev, exec, onMode: this.onMode, rerender: () => this.renderStage() };
+    const nodes = views.map((v) => {
+      const fn = RENDERERS[v.kind];
+      try {
+        return fn ? fn(v, ctx) : null;
+      } catch (e) {
+        console.error('visualizer failed', v, e);
+        return null;
+      }
+    }).filter(Boolean);
+    if (nodes.length) this.stagePZ.show(this.stageBody, [h('div', { class: 'views' }, nodes)]);
+    // Pure recursion (fib, permutations of indices...): the call tree *is* the data structure.
+    else if (exec.recursive) renderCallTree(this.stageBody, frame, exec, this.treeStagePZ);
+    else if (!notes.length) mount(this.stageBody, h('div', { class: 'stage-empty' }, h('div', { class: 'big' }, 'No data structures in scope'), 'Scalar variables are listed under Variables below.'));
+    else mount(this.stageBody);
   }
 
   setOverrides(overrides) {
@@ -176,11 +185,13 @@ export class VisualizationPanel {
   renderDock() {
     const { frame, exec, run } = this.state;
     const prev = frame && exec ? exec.frames[frame.index - 1] : null;
-    this.panel.scrollTop = this.tab === 'tree' ? this.panel.scrollTop : 0;
+    // the call tree is a pan/zoom surface that fills the panel; every other tab scrolls inside it
+    this.panel.classList.toggle('pz-host', this.tab === 'tree');
+    if (this.tab !== 'tree') this.panel.scrollTop = 0;
     switch (this.tab) {
       case 'vars': renderVariables(this.panel, frame, exec, prev); break;
       case 'stack': renderCallStack(this.panel, frame); break;
-      case 'tree': renderCallTree(this.panel, frame, exec); break;
+      case 'tree': renderCallTree(this.panel, frame, exec, this.dockTreePZ); break;
       case 'heap': renderHeap(this.panel, frame); break;
       default: renderConsole(this.panel, { exec, frame, run });
     }
