@@ -76,8 +76,11 @@
 .case-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-strong); }
 .case-dot.pass { background: var(--ret); }
 .case-dot.fail { background: var(--err); }
-.case-body { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px 12px 12px; overflow: auto; }
-.case-field { display: grid; gap: 4px; min-width: 0; }
+/* Input and Expected output share the first row and take any extra height; Output sits under them at its own height */
+.case-body { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; gap: 10px; padding: 10px 12px 12px; overflow: auto; }
+/* label on top, then the box: only the box absorbs spare height, so labels and boxes line up across the two fields */
+.case-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.case-field textarea { flex: 1 1 auto; }
 .case-field label { font-size: 11.5px; color: var(--muted); font-weight: 500; }
 .case-field textarea, .case-field .case-output {
   font: 12.5px/1.5 var(--mono); background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
@@ -91,6 +94,7 @@
 .case-output.fail { border-color: color-mix(in srgb, var(--err) 50%, var(--border)); }
 .case-hint { font-size: 11.5px; color: var(--muted); grid-column: 1 / -1; margin-top: -4px; }
 .case-error { font-size: 11.5px; color: var(--err); }
+.case-error:empty { display: none; }
 
 @media (max-width: 900px) {
   .editor-card { min-height: 0; flex: none; }
