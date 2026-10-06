@@ -128,13 +128,19 @@ export function renderCallTree(el, frame, exec, pz) {
   const svg = s('svg', { class: 'calltree', width, height, viewBox: `0 0 ${width} ${height}` });
   const y = (d) => 10 + d * (NODE_H + GAP_Y);
   let focus = null;
+  const edges = []; // {el, from, to}: the link group between a call and one of its children
+  const nodeEls = new Map(); // call id -> its node group
   const drawLinks = (c) => {
     for (const ch of c.children) {
       const x1 = c.x;
       const y1 = y(c.depth) + NODE_H;
       const x2 = ch.x;
       const y2 = y(ch.depth);
-      svg.appendChild(s('path', { class: 'link', d: `M${x1},${y1} C${x1},${y1 + GAP_Y / 2} ${x2},${y2 - GAP_Y / 2} ${x2},${y2}` }));
+      const d = `M${x1},${y1} C${x1},${y1 + GAP_Y / 2} ${x2},${y2 - GAP_Y / 2} ${x2},${y2}`;
+      // the invisible fat copy of the line is what the pointer can hit: the drawn line is only 1.4px wide
+      const el = s('g', { class: 'edge' }, s('path', { class: 'link', d }), s('path', { class: 'hit', d }), s('title', null, `${c.full} → ${ch.full}`));
+      svg.appendChild(el);
+      edges.push({ el, from: c.id, to: ch.id });
       drawLinks(ch);
     }
   };
@@ -145,11 +151,19 @@ export function renderCallTree(el, frame, exec, pz) {
       c.retLabel ? s('text', { class: 'ret', x: c.x, y: y(c.depth) + 28 }, c.retLabel) : null);
     g.appendChild(s('title', null, `${c.full}\nstatus: ${c.status}${c.repeat ? '\nrepeats an earlier call with the same arguments' : ''}${c.retLabel ? '\nreturned ' + c.retLabel.slice(2) : ''}`));
     svg.appendChild(g);
+    nodeEls.set(c.id, g);
     if (c.status === 'active' || c.status === 'returning') focus = c;
     c.children.forEach(drawNodes);
   };
   roots.forEach(drawLinks);
   roots.forEach(drawNodes);
+
+  // hovering a link lights it up together with the two calls it connects, and dims the rest of the tree
+  for (const { el: edge, from, to } of edges) {
+    const lit = [edge, nodeEls.get(from), nodeEls.get(to)];
+    edge.addEventListener('mouseenter', () => { svg.classList.add('hovering'); lit.forEach((n) => n.classList.add('hl')); });
+    edge.addEventListener('mouseleave', () => { svg.classList.remove('hovering'); lit.forEach((n) => n.classList.remove('hl')); });
+  }
 
   const legend = h('div', { class: 'legend' },
     h('span', { class: 'l-active' }, 'active'), h('span', { class: 'l-waiting' }, 'waiting'),

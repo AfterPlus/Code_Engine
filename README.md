@@ -98,7 +98,8 @@ CORPUS=samples node frontend/tests/engines.mjs js,py,cpp,c               # the b
   (memoized) DP, the cell of every call still waiting on a sub-problem is outlined, and arrows run from the sub-problems
   a cell is built from (the calls it made, or the cells its line read) to the cell. In the call tree, shared
   arguments (the `cuts` array, the memo table) are left out of labels and a call that repeats an earlier one is marked
-  `↩`: those are the overlapping sub-problems memoization removes.
+  `↩`: those are the overlapping sub-problems memoization removes. Hover a link in the call tree to
+  light it up together with the two calls it connects (the rest of the tree dims).
 
 ## Architecture
 
