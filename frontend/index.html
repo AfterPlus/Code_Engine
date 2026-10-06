@@ -69,6 +69,7 @@
         </button>
         <textarea id="problem" class="problem-text" spellcheck="false" placeholder="Paste the problem statement, constraints and examples…"></textarea>
       </div>
+      <div class="splitter splitter-h" id="splitter-problem" role="separator" aria-orientation="horizontal" tabindex="0" title="Drag to resize (double-click to reset)"></div>
 
       <div class="card editor-card">
         <div class="card-head editor-head">
@@ -84,15 +85,17 @@
         <div class="defs-bar" id="defs-bar" hidden></div>
         <div class="editor-host" id="editor"></div>
       </div>
+      <div class="splitter splitter-h" id="splitter-tests" role="separator" aria-orientation="horizontal" tabindex="0" title="Drag to resize (double-click to reset)"></div>
 
       <div class="card tests" id="tests"></div>
     </section>
 
-    <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" tabindex="0" title="Drag to resize"></div>
+    <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" tabindex="0" title="Drag to resize (double-click to reset)"></div>
 
     <section class="right" id="right">
       <div class="stepbar" id="stepbar"></div>
       <div class="stage" id="stage"></div>
+      <div class="splitter splitter-h" id="splitter-dock" role="separator" aria-orientation="horizontal" tabindex="0" title="Drag to resize (double-click to reset)"></div>
       <div class="dock" id="dock"></div>
     </section>
   </main>

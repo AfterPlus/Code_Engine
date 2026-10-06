@@ -1,8 +1,8 @@
 /* ---------------------------------------------------------------- problem */
 .problem { flex: 0 0 auto; }
 .problem-text {
-  resize: vertical;
-  min-height: 70px; height: 110px; max-height: 40vh;
+  resize: none; /* the divider below the card resizes it */
+  min-height: 56px; height: var(--problem-height, 110px); max-height: max(56px, calc(100vh - 430px));
   border: 0; outline: none; background: transparent;
   padding: 10px 12px; color: var(--text-2); font-size: 13px; line-height: 1.5;
 }
@@ -61,6 +61,9 @@
 
 /* ---------------------------------------------------------------- test cases */
 .tests { flex: 0 0 auto; max-height: 42%; }
+/* a height the user dragged: the card keeps it and its body scrolls */
+.tests.sized { height: var(--tests-height); max-height: max(96px, calc(100% - 250px)); }
+.tests.sized .case-body { flex: 1 1 auto; min-height: 0; }
 .tests .card-head { gap: 6px; }
 .case-tabs { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .case-tab {
@@ -92,6 +95,6 @@
 @media (max-width: 900px) {
   .editor-card { min-height: 0; flex: none; }
   .editor-host { flex: none; height: 340px; }
-  .tests { max-height: none; }
+  .tests, .tests.sized { height: auto; max-height: none; }
   .case-body { grid-template-columns: 1fr; }
 }

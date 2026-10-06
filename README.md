@@ -86,6 +86,11 @@ CORPUS=samples node frontend/tests/engines.mjs js,py,cpp,c               # the b
   zoom, **Fit** everything, or go back to 100%. Your position and zoom stay put while you step; a new run resets them.
   The call tree can also **Follow** the active call (on by default; dragging turns it off, the button turns it back on).
   With a surface focused, `+` / `-` zoom and `0` resets.
+- **Resizable panels.** Every divider can be dragged: between the two columns, between the visualization and the
+  Variables / Call Stack / Call Tree / Memory / Console dock, between the problem statement and the editor (with its
+  Solution / Definitions tabs), and between the editor and the test cases. With a divider focused, the arrow keys nudge it
+  (`Shift` for bigger steps) and a double-click restores the default. Sizes are remembered; on narrow screens the page
+  stacks and the dividers are hidden.
 - **DP tables.** A table allocated for the worst case (`dp[102][102]`) is drawn at the size the run actually used
   (`showing 5×6`, with an `all 102×102` button), since the whole trace is known before anything is drawn. Cells nobody
   touched are hatched, `INT_MAX` / `Infinity` read as `∞`, and the axes are labelled with the input they walk (a string
