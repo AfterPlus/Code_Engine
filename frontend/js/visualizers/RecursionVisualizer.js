@@ -9,6 +9,7 @@ const NODE_H = 40;
 const GAP_X = 14;
 const GAP_Y = 30;
 const MAX_NODES = 400;
+const TOP = 10; // margin above the root
 
 const analyses = new WeakMap();
 
@@ -124,9 +125,9 @@ export function renderCallTree(el, frame, exec, pz) {
   for (const r of roots) x = layout(r, x, 0);
 
   const width = Math.max(x + 10, 200);
-  const height = (maxDepth + 1) * (NODE_H + GAP_Y) + 10;
+  const height = (maxDepth + 1) * (NODE_H + GAP_Y) + TOP;
   const svg = s('svg', { class: 'calltree', width, height, viewBox: `0 0 ${width} ${height}` });
-  const y = (d) => 10 + d * (NODE_H + GAP_Y);
+  const y = (d) => TOP + d * (NODE_H + GAP_Y);
   let focus = null;
   const edges = []; // {el, from, to}: the link group between a call and one of its children
   const nodeEls = new Map(); // call id -> its node group

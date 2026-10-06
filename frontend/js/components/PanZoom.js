@@ -50,7 +50,7 @@ export class PanZoom {
       h('button', { type: 'button', class: 'pz-btn', 'aria-label': 'Zoom in', title: 'Zoom in', onclick: () => this.zoomTo(this.scale * STEP) }, '+'),
       h('button', { type: 'button', class: 'pz-btn', title: 'Shrink to fit everything', onclick: () => this.fit() }, 'Fit'),
       this.followBtn);
-    this.el = h('div', { class: 'pz' }, this.scroller, this.legend, this.tools);
+    this.el = h('div', { class: 'pz' }, this.legend, this.scroller, this.tools);
 
     this.scroller.addEventListener('wheel', (e) => this.onWheel(e), { passive: false });
     this.scroller.addEventListener('pointerdown', (e) => this.onDown(e));
@@ -105,15 +105,22 @@ export class PanZoom {
     if (!this.view.w) this.view = { w: this.scroller.clientWidth, h: this.scroller.clientHeight };
     const base = this.view.w;
     if (!base) return; // detached or hidden: measured again when it is shown
-    if (this.contentW !== base) {
-      this.content.style.width = `${base}px`;
-      this.contentW = base;
+    // Content of a known size (the call tree) is given the whole viewport at any zoom, so it can centre itself in it
+    const width = this.hint ? Math.max(base / this.scale, this.hint.w) : base;
+    if (this.contentW !== width) {
+      this.content.style.width = `${width}px`;
+      this.contentW = width;
     }
     this.natural = this.hint
-      ? { w: Math.max(base, this.hint.w), h: this.hint.h }
+      ? { ...this.hint }
       : { w: Math.max(base, this.content.scrollWidth), h: this.content.scrollHeight };
-    this.sizer.style.width = `${this.natural.w * this.scale}px`;
+    this.sizer.style.width = `${(this.hint ? width : this.natural.w) * this.scale}px`;
     this.sizer.style.height = `${this.natural.h * this.scale}px`;
+  }
+
+  /** How far a narrower-than-the-viewport content is pushed right to sit in the middle (see layout). */
+  offsetX() {
+    return this.hint ? Math.max(0, (this.contentW - this.hint.w) / 2) : 0;
   }
 
   apply() {
@@ -145,9 +152,10 @@ export class PanZoom {
     s.scrollTo(0, 0);
   }
 
+  /** Scrolls so the content point (x, y) is in the middle of the viewport. */
   centerOn(x, y, smooth = false) {
     this.scroller.scrollTo({
-      left: Math.max(0, x * this.scale - this.view.w / 2),
+      left: Math.max(0, (x + this.offsetX()) * this.scale - this.view.w / 2),
       top: Math.max(0, y * this.scale - this.view.h / 2),
       behavior: smooth ? 'smooth' : 'auto',
     });
