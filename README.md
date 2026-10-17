@@ -53,6 +53,22 @@ CORPUS=samples node frontend/tests/engines.mjs js,py,cpp,c               # the b
 `cppDiff.cjs --regen` re-records the expected outputs with a real compiler (`pip install ziglang`, then set
 `ZIG_PYTHONPATH` if it is installed with `--target`). `engines.mjs` needs Python 3 on the PATH for the `py` engine.
 
+### Deploying the frontend to Cloudflare Pages
+
+The frontend is plain static files, so it can be hosted on its own; only Java needs the backend.
+
+1. In Cloudflare: **Workers & Pages → Create → Pages → Connect to Git**, and pick this repository.
+2. Build settings: framework preset **None**, build command `node deploy/write-config.mjs`, build output
+   directory `frontend`, root directory left empty.
+3. Environment variable (optional): `CODE_ENGINE_BACKEND=https://your-backend.example.com`. The build writes it
+   into `frontend/config.js`. Leave it unset to deploy without Java (the other languages still work).
+4. On the backend, allow the Pages site to call the API:
+   `LCV_CORS_ALLOWED_ORIGINS=https://<project>.pages.dev,https://*.<project>.pages.dev` (the second entry covers
+   preview deployments). Add your own domain there too once you attach one.
+
+`frontend/_headers` sets security headers on Pages. A user can still point the app at a different backend under
+⚙ Settings; that overrides `config.js`.
+
 ## Using it
 
 - **Examples ▾** loads ten problems in the spec's milestone order (Two Sum, Fibonacci, Binary Search, Reverse

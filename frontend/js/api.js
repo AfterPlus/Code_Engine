@@ -8,7 +8,10 @@ import { runCpp } from './runners/cppRunner.js';
 const TERMINAL = new Set(['SUCCESS', 'COMPILE_ERROR', 'RUNTIME_ERROR', 'TIMEOUT', 'MEMORY_LIMIT', 'STEP_LIMIT',
   'SECURITY_VIOLATION', 'INVALID_INPUT', 'CANCELLED', 'INTERNAL_ERROR']);
 
+// Order: the backend set in config.js (per deployment), else the page's own origin, else a local dev server.
 export function defaultBackend() {
+  const configured = globalThis.CODE_ENGINE_CONFIG?.backend;
+  if (configured) return configured;
   return /^https?:$/.test(location.protocol) ? location.origin : 'http://localhost:8080';
 }
 

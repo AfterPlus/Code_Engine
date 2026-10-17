@@ -242,6 +242,7 @@ $('set-steps').addEventListener('change', (e) => {
   save();
 });
 $('set-backend').value = state.settings.backend;
+$('set-backend').placeholder = globalThis.CODE_ENGINE_CONFIG?.backend || 'same origin';
 $('set-backend').addEventListener('change', (e) => { state.settings.backend = e.target.value.trim(); save(); });
 window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { editor.refreshTheme(); renderFrame(); });
 

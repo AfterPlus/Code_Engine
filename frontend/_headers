@@ -1,0 +1,10 @@
+# Cloudflare Pages response headers (ignored by the Spring Boot server).
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# Test pages and fixtures are not part of the app.
+/tests/*
+  X-Robots-Tag: noindex
