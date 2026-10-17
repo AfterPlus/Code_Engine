@@ -1,8 +1,8 @@
 /* ---------------------------------------------------------------- problem */
 .problem { flex: 0 0 auto; }
 .problem-text {
-  resize: vertical;
-  min-height: 70px; height: 110px; max-height: 40vh;
+  resize: none; /* the divider below the card resizes it */
+  min-height: 56px; height: var(--problem-height, 110px); max-height: max(56px, calc(100vh - 430px));
   border: 0; outline: none; background: transparent;
   padding: 10px 12px; color: var(--text-2); font-size: 13px; line-height: 1.5;
 }
@@ -12,7 +12,7 @@
 .editor-card { flex: 1 1 auto; min-height: 220px; }
 .editor-host { flex: 1; min-height: 0; position: relative; border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; }
 
-/* file tabs: the solution and the definitions LeetCode ships with the problem */
+/* file tabs: the solution and the helper classes an online judge normally supplies */
 .editor-head { padding-top: 0; padding-bottom: 0; }
 .editor-tabs { display: flex; gap: 2px; align-self: stretch; align-items: flex-end; }
 .editor-tab {
@@ -61,6 +61,9 @@
 
 /* ---------------------------------------------------------------- test cases */
 .tests { flex: 0 0 auto; max-height: 42%; }
+/* a height the user dragged: the card keeps it and its body scrolls */
+.tests.sized { height: var(--tests-height); max-height: max(96px, calc(100% - 250px)); }
+.tests.sized .case-body { flex: 1 1 auto; min-height: 0; }
 .tests .card-head { gap: 6px; }
 .case-tabs { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .case-tab {
@@ -73,8 +76,11 @@
 .case-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-strong); }
 .case-dot.pass { background: var(--ret); }
 .case-dot.fail { background: var(--err); }
-.case-body { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px 12px 12px; overflow: auto; }
-.case-field { display: grid; gap: 4px; min-width: 0; }
+/* Input and Expected output share the first row and take any extra height; Output sits under them at its own height */
+.case-body { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; gap: 10px; padding: 10px 12px 12px; overflow: auto; }
+/* label on top, then the box: only the box absorbs spare height, so labels and boxes line up across the two fields */
+.case-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.case-field textarea { flex: 1 1 auto; }
 .case-field label { font-size: 11.5px; color: var(--muted); font-weight: 500; }
 .case-field textarea, .case-field .case-output {
   font: 12.5px/1.5 var(--mono); background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
@@ -88,10 +94,11 @@
 .case-output.fail { border-color: color-mix(in srgb, var(--err) 50%, var(--border)); }
 .case-hint { font-size: 11.5px; color: var(--muted); grid-column: 1 / -1; margin-top: -4px; }
 .case-error { font-size: 11.5px; color: var(--err); }
+.case-error:empty { display: none; }
 
 @media (max-width: 900px) {
   .editor-card { min-height: 0; flex: none; }
   .editor-host { flex: none; height: 340px; }
-  .tests { max-height: none; }
+  .tests, .tests.sized { height: auto; max-height: none; }
   .case-body { grid-template-columns: 1fr; }
 }

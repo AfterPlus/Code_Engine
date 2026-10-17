@@ -1,9 +1,12 @@
 # Code Engine
 
-Paste a LeetCode problem, your solution, and a test case. The app **executes the code, records the real program
+Paste a coding problem, your solution, and a test case. The app **executes the code, records the real program
 state at every step, and turns it into a visual dry run**: arrays with pointers, hash maps, stacks, queues,
 linked lists, trees, graphs, DP tables, the call stack, a recursion tree, and memory. You step through it
 frame by frame.
+
+This is an independent project. It is not affiliated with, endorsed by or sponsored by any online coding platform, and
+the example problems are classic algorithm exercises written up in original wording.
 
 Nothing is pattern-matched per problem. Every language produces one generic execution trace, and every
 visualizer is chosen from the runtime shape of the data plus how the source code uses it.
@@ -30,7 +33,7 @@ To build a single runnable jar (frontend bundled inside):
 ```bash
 cd backend
 ./mvnw package
-java -jar target/leetcode-visualizer-0.1.0.jar
+java -jar target/code-engine-0.1.0.jar
 ```
 
 **Everything but Java:** JavaScript, Python, C and C++ are traced entirely in the browser, so the frontend works without
@@ -44,8 +47,9 @@ Serve the folder over HTTP (Web Workers don't load from `file://`), for example 
 cd backend && ./mvnw test           # Java tracer end to end: real javac, real sandboxed JVM, real JDI
 node --test frontend/tests/jsTracer.test.cjs   # JavaScript instrumenter + tracer
 node frontend/tests/syntaxCheck.cjs            # parses every frontend file (catches slips without a browser)
+node --test frontend/tests/dpTable.test.mjs    # DP table analysis (used region, sub-problem cells) on real C++ / JS traces
 node frontend/tests/cppDiff.cjs                # C/C++ interpreter vs. recorded output of a real compiler (tests/cpp/programs)
-node frontend/tests/engines.mjs js,py,cpp,c    # ~270 LeetCode tree/list/graph problem runs across the browser engines
+node frontend/tests/engines.mjs js,py,cpp,c    # ~270 tree/list/graph problem runs across the browser engines
 LCV_BACKEND=http://localhost:8080 node frontend/tests/engines.mjs java   # the same problems through the Java backend
 CORPUS=samples node frontend/tests/engines.mjs js,py,cpp,c               # the built-in examples in every language
 ```
@@ -71,23 +75,24 @@ The frontend is plain static files, so it can be hosted on its own; only Java ne
 
 ## Using it
 
-- **Examples ▾** loads ten problems in the spec's milestone order (Two Sum, Fibonacci, Binary Search, Reverse
-  Linked List, Level Order, Number of Islands, Path in Graph, LCS, Valid Parentheses, Kth Largest), each in
-  Java, JavaScript, Python, C++ and (where it makes sense) C, plus three tree examples that use the Definitions tab.
-- **Definitions tab.** LeetCode ships some classes with the problem and never shows them in the editor (`TreeNode`,
+- **Examples ▾** loads eleven problems in the spec's milestone order (Pair With a Given Sum, Fibonacci, Binary Search,
+  Reverse a Linked List, Level-Order Traversal, Counting Islands, Path Between Two Vertices, Longest Common Subsequence,
+  Cutting a Stick at Minimum Cost, Balanced Brackets, Kth Largest), each in Java, JavaScript, Python, C++ and (where it makes sense) C, plus three tree examples that use
+  the Definitions tab.
+- **Definitions tab.** Online judges ship some classes with the problem and never show them in the editor (`TreeNode`,
   `ListNode`, `Node` for N-ary trees, graphs, random-pointer lists, trees with `next`...). Put them in the second editor
-  tab so the solution can be pasted exactly as it is on LeetCode: the tab's text runs before the solution, is never
-  traced, and never shifts the solution's line numbers. "Insert definition…" adds LeetCode's own version of each class
+  tab so the solution can be pasted exactly as the judge presents it: the tab's text runs before the solution, is never
+  traced, and never shifts the solution's line numbers. "Insert definition…" adds the standard version of each class
   in the current language, and a bar suggests the ones your solution uses but nothing declares. The class also decides
   how test inputs are built (`[1,null,3,2,4,null,5,6]` becomes an N-ary tree when `Node` has `children`; adjacency
   lists become graphs when it has `neighbors`). TreeNode and ListNode are still added automatically if missing.
 - **Hover to inspect.** With a run loaded, hover any variable in the solution to see its value at the current step:
   `root.left`, `nums[i]`, whole arrays, maps, linked lists and trees (a tree shows as its level-order list), and what
   the previous line changed it from.
-- **Test cases** accept JSON (`{"nums": [2,7], "target": 9}`) or LeetCode's own format
+- **Test cases** accept JSON (`{"nums": [2,7], "target": 9}`) or the common online-judge format
   (`nums = [2,7], target = 9`). Values are matched to parameters by name. `ListNode`/`TreeNode` parameters are
   built from arrays (level order for trees): in Java from the parameter type, in JavaScript from the JSDoc
-  `@param {ListNode}` annotation LeetCode templates include.
+  `@param {ListNode}` annotation online-judge templates include.
 - **Run** (`Ctrl+Enter`) traces the selected case; **Run all** checks every case against its expected output.
 - Step with `←` / `→`, play/pause with `Space`, jump with `Home` / `End`, or click/drag the timeline. Tick
   colour is the event type and tick height is the call depth, so loops and recursion are visible at a glance.
@@ -95,6 +100,25 @@ The frontend is plain static files, so it can be hosted on its own; only Java ne
   that line did: `map.containsKey(7) → false`, `nums[2] = 5`, `stack.pop() → 3`, `dp[2][3] = 2 ← dp[1][2], dp[2][2]`.
 - Views with more than one sensible drawing have a toggle (a list of lists as table or graph, a priority
   queue as array or heap tree).
+- **Pan and zoom.** The data-structure stage and the call tree are pan/zoom surfaces: drag to move around, `Ctrl`/`⌘` +
+  scroll (or pinch) to zoom around the pointer, plain scroll and the scrollbars still work, and the corner buttons
+  zoom, **Fit** everything, or go back to 100%. Your position and zoom stay put while you step; a new run resets them.
+  The call tree can also **Follow** the active call (on by default; dragging turns it off, the button turns it back on).
+  With a surface focused, `+` / `-` zoom and `0` resets.
+- **Resizable panels.** Every divider can be dragged: between the two columns, between the visualization and the
+  Variables / Call Stack / Call Tree / Memory / Console dock, between the problem statement and the editor (with its
+  Solution / Definitions tabs), and between the editor and the test cases. With a divider focused, the arrow keys nudge it
+  (`Shift` for bigger steps) and a double-click restores the default. Sizes are remembered; on narrow screens the page
+  stacks and the dividers are hidden.
+- **DP tables.** A table allocated for the worst case (`dp[102][102]`) is drawn at the size the run actually used
+  (`showing 5×6`, with an `all 102×102` button), since the whole trace is known before anything is drawn. Cells nobody
+  touched are hatched, `INT_MAX` / `Infinity` read as `∞`, and the axes are labelled with the input they walk (a string
+  for LCS / edit distance, or an array the code indexes with the same variables, like `cuts[i]`). In recursive
+  (memoized) DP, the cell of every call still waiting on a sub-problem is outlined, and arrows run from the sub-problems
+  a cell is built from (the calls it made, or the cells its line read) to the cell. In the call tree, shared
+  arguments (the `cuts` array, the memo table) are left out of labels and a call that repeats an earlier one is marked
+  `↩`: those are the overlapping sub-problems memoization removes. Hover a link in the call tree to
+  light it up together with the two calls it connects (the rest of the tree dims).
 
 ## Architecture
 
@@ -104,7 +128,7 @@ frontend/                      backend/  (Spring Boot 4, Java 21+)
   js/api.js        Java→REST,    service/ExecutionService         bounded queue, polling, cancel
                    JS→Worker     service/TraceService             prepare → compile → vet → trace → result
   js/runners/      JS engine     service/SandboxService           temp dirs, javac, child JVM, cleanup
-  js/state/        state builder instrumentation/JavaInstrumenter LeetCode-style wrapping, helper types
+  js/state/        state builder instrumentation/JavaInstrumenter judge-style wrapping, helper types
   js/visualizers/  renderers     instrumentation/TraceCollector   JDI event loop (the tracer)
   js/components/   UI panels     instrumentation/HeapReader       values + collections → heap snapshot
                                  security/SandboxPolicy           bytecode API deny-list
@@ -113,7 +137,7 @@ frontend/                      backend/  (Spring Boot 4, Java 21+)
 
 ### Java engine (JVM debugger)
 
-1. `JavaInstrumenter` adds LeetCode's default imports, wraps a bare method in `class Solution`, and adds
+1. `JavaInstrumenter` adds the usual default imports, wraps a bare method in `class Solution`, and adds
    `ListNode`/`TreeNode` if used but not declared. Everything is inserted on line 1 or in separate files, so
    line numbers match the editor exactly.
 2. The code is compiled in-process (`-g -parameters -proc:none`), then every class file is **vetted**
@@ -164,7 +188,7 @@ and where blocks end.
 | Runtime shape | View |
 |---|---|
 | array / list of scalars | array with pointers, range shading, reads/writes/swaps |
-| array/list of arrays of scalars | table (DP/grid); ragged lists of in-range ints default to graph |
+| array/list of arrays of scalars | table (DP/grid), cropped to the part a work table actually used; ragged lists of in-range ints default to graph |
 | map / set / plain JS object of scalars | key–value table / chips, with lookups and misses |
 | stack; deque used via push/pop | vertical stack |
 | queue / deque | horizontal queue with front/back |
@@ -217,7 +241,7 @@ API (§36): `POST /api/v1/execution/run` (waits up to 20 s, else returns `QUEUED
 - **Python** runs on Pyodide (CPython 3.14 in WebAssembly, module worker) under `sys.settrace`; recursion is capped at
   about 1000 frames. Only the standard library is available.
 - **C and C++ run on a built-in interpreter, not a compiler**: tree-sitter parses, a tree-walking interpreter executes.
-  It covers what LeetCode solutions use (classes, templates by erasure, references, pointers, `new`/`malloc`, lambdas,
+  It covers what typical interview solutions use (classes, templates by erasure, references, pointers, `new`/`malloc`, lambdas,
   the STL containers and algorithms, `cout`/`printf`, `stringstream`) and is checked against a real compiler, but it is
   not a full C++: no `goto`, coroutines, function-like macros, multithreading, or undefined behaviour (out-of-range
   indexing and null dereferences raise a clear error instead). Recursion is limited to about 1500 frames, and

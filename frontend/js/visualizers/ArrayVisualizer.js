@@ -1,8 +1,8 @@
 // 1D arrays and lists: pointers from the code, range shading, reads, writes, swaps, and dependency captions.
 
 import { h } from '../util/dom.js';
-import { isRef, scalar, typeLabel } from '../util/values.js';
-import { viewShell, heapChange, readsOf, lookupsOf, cellText, intVars, changedLocal } from './common.js';
+import { fmt, isRef, scalar, typeLabel } from '../util/values.js';
+import { viewShell, heapChange, readsOf, lookupsOf, cellText, infinityOf, intVars, changedLocal } from './common.js';
 
 export function renderArray(view, ctx) {
   const { frame, exec } = ctx;
@@ -45,7 +45,7 @@ export function renderArray(view, ctx) {
       !isEnd && isRef(v) && 'ref'];
     cells.push(h('div', { class: 'arr-cell' },
       h('div', { class: 'arr-idx' }, isEnd ? '' : i),
-      h('div', { class: cls, title: isEnd ? 'end' : undefined }, isEnd ? '·' : cellText(v, heap)),
+      h('div', { class: cls, title: isEnd ? 'end' : infinityOf(v) ? fmt(v, heap, 0) : undefined }, isEnd ? '·' : cellText(v, heap)),
       h('div', { class: 'arr-ptrs' }, names.map((n) => h('span', { class: ['ptr', changedLocal(frame, n) && 'changed'] }, n)))));
   }
   if (arr.truncated) cells.push(h('div', { class: 'arr-more' }, `… ${arr.length - len} more`));

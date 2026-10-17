@@ -200,14 +200,23 @@ code, .mono { font-family: var(--mono); }
 }
 .left, .right { min-width: 0; min-height: 0; }
 .left { display: flex; flex-direction: column; gap: 12px; padding-right: 6px; }
-.right { display: grid; grid-template-rows: auto minmax(0, 1fr) minmax(170px, 38%); gap: 12px; padding-left: 6px; }
+/* the 12px row between the visualization and the dock is its drag handle; --dock-height is the dragged size */
+.right { display: grid; grid-template-rows: auto minmax(0, 1fr) 12px clamp(120px, var(--dock-height, max(170px, 38%)), calc(100% - 190px)); gap: 0; padding-left: 6px; }
+.right > .stepbar { margin-bottom: 12px; }
 
+/* drag handles: the column divider, and the row dividers that sit in the 12px gaps between panels */
 .splitter { cursor: col-resize; border-radius: 4px; position: relative; }
 .splitter::after {
   content: ''; position: absolute; left: 2px; top: 50%; width: 2px; height: 36px; margin-top: -18px;
   border-radius: 2px; background: var(--border);
 }
-.splitter:hover::after, .splitter.dragging::after { background: var(--accent); }
+.splitter:hover::after, .splitter.dragging::after, .splitter:focus-visible::after { background: var(--accent); }
+.splitter:focus-visible { outline: none; }
+.splitter-h { cursor: row-resize; flex: none; height: 12px; margin: -12px 0; z-index: 3; }
+.right > .splitter-h { margin: 0; }
+.splitter-h::after { left: 50%; top: 5px; width: 36px; height: 2px; margin: 0 0 0 -18px; }
+.problem.collapsed + .splitter-h { display: none; }
+body.resizing { user-select: none; }
 
 .card {
   background: var(--panel);
@@ -246,6 +255,7 @@ code, .mono { font-family: var(--mono); }
   .workspace { display: flex; flex-direction: column; padding: 12px 16px; gap: 12px; }
   .splitter { display: none; }
   .left, .right { padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .right > .stepbar { margin-bottom: 0; }
   .stage { min-height: 320px; max-height: 70vh; }
   .dock { height: 360px; }
   .player { position: sticky; bottom: 0; z-index: 20; }

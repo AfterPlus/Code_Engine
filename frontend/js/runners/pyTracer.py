@@ -1,5 +1,5 @@
 """
-Python tracer + LeetCode harness.
+Python tracer + judge-style harness.
 
 `lcv_run(code, definitions, testcase_json, max_steps, timeout_ms)` executes the user's solution under
 sys.settrace and returns (as a JSON string) a result in exactly the normalized shape the other engines produce
@@ -357,7 +357,7 @@ def arg_names(code):
     return names
 
 
-# ---------------------------------------------------------------------------------------------- LeetCode structures
+# ---------------------------------------------------------------------------------------------- judge structures
 # (port of js/runners/structures.js)
 
 def _make(cls, val):
@@ -854,7 +854,7 @@ def lcv_run(code, definitions, testcase_json, max_steps, timeout_ms):
             user_code = compile(code, USER_FILE, 'exec')
         except SyntaxError as e:
             return compile_error(e, USER_FILE)
-        # LeetCode supplies these classes; if the solution uses them but nothing defined them, define the standard ones
+        # online judges supply these classes; if the solution uses them but nothing defined them, define the standard ones
         for missing, src in (('ListNode', 'class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n'),
                              ('TreeNode', 'class TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n')):
             if missing not in ns and re.search(r'\b%s\b' % missing, code) and not re.search(r'\bclass\s+%s\b' % missing, code):

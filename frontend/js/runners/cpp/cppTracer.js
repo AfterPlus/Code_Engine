@@ -1,5 +1,5 @@
 /*
- * C / C++ tracer + LeetCode harness. `runTrace` parses the definitions and the solution, runs the selected function
+ * C / C++ tracer + judge-style harness. `runTrace` parses the definitions and the solution, runs the selected function
  * with the test case, and returns a result in exactly the normalized shape the other engines produce (see
  * ExecutionResult.java): steps with call stacks, locals and a heap snapshot, output, status and error.
  */
@@ -205,7 +205,7 @@
     }
   }
 
-  // ---------------------------------------------------------------------------------------------- LeetCode structures over interpreter objects
+  // ---------------------------------------------------------------------------------------------- judge structures over interpreter objects
 
   const structureAdapter = (I) => ({
     make(cls, val) {
@@ -400,7 +400,7 @@
 
   /**
    * @param {string} code  the solution
-   * @param {string} definitions  LeetCode's helper types (TreeNode, ListNode, Node ...), never traced
+   * @param {string} definitions  the judge's helper types (TreeNode, ListNode, Node ...), never traced
    * @param {object} testCase  named arguments
    * @param {{language: 'c'|'cpp', maxSteps?: number, timeoutMs?: number}} opts
    */

@@ -1,4 +1,4 @@
-// LeetCode tree problems in every language, written the way LeetCode's own templates are (no TreeNode / ListNode /
+// Classic tree problems in every language, written the way online-judge templates are (no TreeNode / ListNode /
 // Node definitions in the solution: those live in the Definitions tab, see js/definitions.js).
 //
 // Used by tests/engines.mjs. Fields: id, title, tests [{input, expected}], and java / javascript / python / cpp / c
@@ -7,7 +7,7 @@
 export const TREE_CORPUS = [
   // ============================================================================ binary trees
   {
-    id: 'max-depth', title: '104. Maximum Depth of Binary Tree',
+    id: 'max-depth', title: 'Maximum Depth of Binary Tree',
     tests: [{ input: 'root = [3,9,20,null,null,15,7]', expected: 3 }, { input: 'root = [1,null,2]', expected: 2 }, { input: 'root = []', expected: 0 }],
     java: `class Solution {
     public int maxDepth(TreeNode root) {
@@ -51,7 +51,7 @@ public:
 }`,
   },
   {
-    id: 'invert-tree', title: '226. Invert Binary Tree',
+    id: 'invert-tree', title: 'Invert Binary Tree',
     tests: [{ input: 'root = [4,2,7,1,3,6,9]', expected: [4, 7, 2, 9, 6, 3, 1] }, { input: 'root = [2,1,3]', expected: [2, 3, 1] }, { input: 'root = []', expected: [] }],
     java: `class Solution {
     public TreeNode invertTree(TreeNode root) {
@@ -98,7 +98,7 @@ public:
 }`,
   },
   {
-    id: 'same-tree', title: '100. Same Tree',
+    id: 'same-tree', title: 'Same Tree',
     tests: [{ input: 'p = [1,2,3], q = [1,2,3]', expected: true }, { input: 'p = [1,2], q = [1,null,2]', expected: false }, { input: 'p = [1,2,1], q = [1,1,2]', expected: false }],
     java: `class Solution {
     public boolean isSameTree(TreeNode p, TreeNode q) {
@@ -139,7 +139,7 @@ public:
 }`,
   },
   {
-    id: 'symmetric-tree', title: '101. Symmetric Tree',
+    id: 'symmetric-tree', title: 'Symmetric Tree',
     tests: [{ input: 'root = [1,2,2,3,4,4,3]', expected: true }, { input: 'root = [1,2,2,null,3,null,3]', expected: false }],
     java: `class Solution {
     public boolean isSymmetric(TreeNode root) {
@@ -195,7 +195,7 @@ bool isSymmetric(struct TreeNode* root) {
 }`,
   },
   {
-    id: 'inorder-recursive', title: '94. Binary Tree Inorder Traversal (recursive)',
+    id: 'inorder-recursive', title: 'Binary Tree Inorder Traversal (recursive)',
     tests: [{ input: 'root = [1,null,2,3]', expected: [1, 3, 2] }, { input: 'root = []', expected: [] }, { input: 'root = [1]', expected: [1] }],
     java: `class Solution {
     public List<Integer> inorderTraversal(TreeNode root) {
@@ -266,7 +266,7 @@ int* inorderTraversal(struct TreeNode* root, int* returnSize) {
 }`,
   },
   {
-    id: 'inorder-iterative', title: '94. Binary Tree Inorder Traversal (iterative, explicit stack)',
+    id: 'inorder-iterative', title: 'Binary Tree Inorder Traversal (iterative, explicit stack)',
     tests: [{ input: 'root = [1,null,2,3]', expected: [1, 3, 2] }, { input: 'root = [1,2,3,4,5,null,8,null,null,6,7,9]', expected: [4, 2, 6, 5, 7, 1, 3, 9, 8] }],
     java: `class Solution {
     public List<Integer> inorderTraversal(TreeNode root) {
@@ -338,7 +338,7 @@ public:
 };`,
   },
   {
-    id: 'level-order', title: '102. Binary Tree Level Order Traversal (BFS)',
+    id: 'level-order', title: 'Binary Tree Level Order Traversal (BFS)',
     tests: [{ input: 'root = [3,9,20,null,null,15,7]', expected: [[3], [9, 20], [15, 7]] }, { input: 'root = [1]', expected: [[1]] }, { input: 'root = []', expected: [] }],
     java: `class Solution {
     public List<List<Integer>> levelOrder(TreeNode root) {
@@ -422,7 +422,7 @@ public:
 };`,
   },
   {
-    id: 'path-sum', title: '112. Path Sum',
+    id: 'path-sum', title: 'Path Sum',
     tests: [{ input: 'root = [5,4,8,11,null,13,4,7,2,null,null,null,1], targetSum = 22', expected: true }, { input: 'root = [1,2,3], targetSum = 5', expected: false }, { input: 'root = [], targetSum = 0', expected: false }],
     java: `class Solution {
     public boolean hasPathSum(TreeNode root, int targetSum) {
@@ -463,7 +463,7 @@ public:
 }`,
   },
   {
-    id: 'lca-bst', title: '235. Lowest Common Ancestor of a Binary Search Tree (nodes given by value)',
+    id: 'lca-bst', title: 'Lowest Common Ancestor of a Binary Search Tree (nodes given by value)',
     tests: [
       { input: 'root = [6,2,8,0,4,7,9,null,null,3,5], p = 2, q = 8', expected: [6, 2, 8, 0, 4, 7, 9, null, null, 3, 5] },
       { input: 'root = [6,2,8,0,4,7,9,null,null,3,5], p = 2, q = 4', expected: [2, 0, 4, null, null, 3, 5] },
@@ -528,7 +528,7 @@ public:
 }`,
   },
   {
-    id: 'lca-binary', title: '236. Lowest Common Ancestor of a Binary Tree (nodes given by value)',
+    id: 'lca-binary', title: 'Lowest Common Ancestor of a Binary Tree (nodes given by value)',
     tests: [
       { input: 'root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 1', expected: [3, 5, 1, 6, 2, 0, 8, null, null, 7, 4] },
       { input: 'root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 4', expected: [5, 6, 2, null, null, 7, 4] },
@@ -583,7 +583,7 @@ public:
 }`,
   },
   {
-    id: 'validate-bst', title: '98. Validate Binary Search Tree',
+    id: 'validate-bst', title: 'Validate Binary Search Tree',
     tests: [{ input: 'root = [2,1,3]', expected: true }, { input: 'root = [5,1,4,null,null,3,6]', expected: false }, { input: 'root = [2147483647]', expected: true }],
     java: `class Solution {
     public boolean isValidBST(TreeNode root) {
@@ -639,7 +639,7 @@ bool isValidBST(struct TreeNode* root) {
 }`,
   },
   {
-    id: 'diameter', title: '543. Diameter of Binary Tree (state kept outside the recursion)',
+    id: 'diameter', title: 'Diameter of Binary Tree (state kept outside the recursion)',
     tests: [{ input: 'root = [1,2,3,4,5]', expected: 3 }, { input: 'root = [1,2]', expected: 1 }],
     java: `class Solution {
     private int best = 0;
@@ -718,7 +718,7 @@ int diameterOfBinaryTree(struct TreeNode* root) {
 }`,
   },
   {
-    id: 'build-tree', title: '105. Construct Binary Tree from Preorder and Inorder Traversal',
+    id: 'build-tree', title: 'Construct Binary Tree from Preorder and Inorder Traversal',
     tests: [{ input: 'preorder = [3,9,20,15,7], inorder = [9,3,15,20,7]', expected: [3, 9, 20, null, null, 15, 7] }, { input: 'preorder = [-1], inorder = [-1]', expected: [-1] }],
     java: `class Solution {
     private int pre = 0;
@@ -791,7 +791,7 @@ public:
 };`,
   },
   {
-    id: 'kth-smallest', title: '230. Kth Smallest Element in a BST (iterative)',
+    id: 'kth-smallest', title: 'Kth Smallest Element in a BST (iterative)',
     tests: [{ input: 'root = [3,1,4,null,2], k = 1', expected: 1 }, { input: 'root = [5,3,6,2,4,null,null,1], k = 3', expected: 3 }],
     java: `class Solution {
     public int kthSmallest(TreeNode root, int k) {
@@ -877,7 +877,7 @@ public:
 }`,
   },
   {
-    id: 'right-side-view', title: '199. Binary Tree Right Side View',
+    id: 'right-side-view', title: 'Binary Tree Right Side View',
     tests: [{ input: 'root = [1,2,3,null,5,null,4]', expected: [1, 3, 4] }, { input: 'root = [1,null,3]', expected: [1, 3] }, { input: 'root = []', expected: [] }],
     java: `class Solution {
     public List<Integer> rightSideView(TreeNode root) {
@@ -950,7 +950,7 @@ public:
 };`,
   },
   {
-    id: 'flatten', title: '114. Flatten Binary Tree to Linked List (in place)',
+    id: 'flatten', title: 'Flatten Binary Tree to Linked List (in place)',
     tests: [{ input: 'root = [1,2,5,3,4,null,6]', expected: [1, null, 2, null, 3, null, 4, null, 5, null, 6] }, { input: 'root = [0]', expected: [0] }],
     java: `class Solution {
     public void flatten(TreeNode root) {
@@ -1014,7 +1014,7 @@ public:
 };`,
   },
   {
-    id: 'balanced', title: '110. Balanced Binary Tree',
+    id: 'balanced', title: 'Balanced Binary Tree',
     tests: [{ input: 'root = [3,9,20,null,null,15,7]', expected: true }, { input: 'root = [1,2,2,3,3,null,null,4,4]', expected: false }, { input: 'root = []', expected: true }],
     java: `class Solution {
     public boolean isBalanced(TreeNode root) {

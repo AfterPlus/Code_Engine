@@ -1,5 +1,5 @@
 /*
- * LeetCode's serialization of node-based structures, shared by the JavaScript and C/C++ engines:
+ * The usual online-judge serialization of node-based structures, shared by the JavaScript and C/C++ engines:
  *
  *   list      [1,2,3]                              ListNode chain
  *   tree      [1,null,2,3]                         level order, TreeNode
@@ -213,7 +213,7 @@
     return null;
   }
 
-  /** LeetCode passes a node "by value" (p = 5): find the node holding that value in the structures built earlier. */
+  /** Judges pass a node "by value" (p = 5): find the node holding that value in the structures built earlier. */
   function findNodeByValue(roots, value, a) {
     const seen = new Set();
     const queue = [...roots];

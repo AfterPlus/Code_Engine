@@ -1,6 +1,6 @@
 /*
  * The C++ standard library subset the interpreter provides: containers and their methods, iterators, <algorithm>,
- * <cmath>, strings, streams, and the C library pieces LeetCode's C templates use (malloc, printf, strlen, qsort...).
+ * <cmath>, strings, streams, and the C library pieces online-judge C templates use (malloc, printf, strlen, qsort...).
  */
 (function (root) {
   'use strict';

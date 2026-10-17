@@ -1,17 +1,21 @@
-// Deep-test corpus: LeetCode problems across data structures and algorithms, each in Java and JavaScript.
+// Deep-test corpus: classic interview problems across data structures and algorithms, each in Java and JavaScript.
 //
 // Every entry is checked end to end by tests/deepTest.mjs (engines, trace invariants, state builder, structure
 // detection) and by tests/render.html (every frame of every view actually rendered). Fields:
-//   tests    [{ input, expected, unordered? }]  input: LeetCode text (parsed like the UI does) or an object
+//   tests    [{ input, expected, unordered? }]  input: online-judge style text (parsed like the UI does) or an object
 //   views    view kinds that must be detected in at least one frame, in every language (viewsBy: per language)
 //   events   semantic events that must be derived at least once (eventsBy: per language)
 //   status   expected status when the run is supposed to fail
 //   stdout   expected printed text (per language)
 
+import { SAMPLES } from '../js/samples.js';
+
+const MIN_COST_CUT = SAMPLES.find((s) => s.id === 'min-cost-cut');
+
 export const CORPUS = [
   // ============================================================================ arrays & hashing
   {
-    id: 'move-zeroes', category: 'arrays', title: '283. Move Zeroes (in-place)',
+    id: 'move-zeroes', category: 'arrays', title: 'Move Zeroes (in-place)',
     java: `class Solution {
     public void moveZeroes(int[] nums) {
         int insert = 0;
@@ -42,7 +46,7 @@ var moveZeroes = function(nums) {
     views: ['array'], events: ['ARRAY_READ'], eventsBy: { java: ['ARRAY_WRITE'], javascript: ['ARRAY_SWAP'] },
   },
   {
-    id: 'sort-colors', category: 'arrays', title: '75. Sort Colors (Dutch flag, helper swap)',
+    id: 'sort-colors', category: 'arrays', title: 'Sort Colors (Dutch flag, helper swap)',
     java: `class Solution {
     public void sortColors(int[] nums) {
         int lo = 0, mid = 0, hi = nums.length - 1;
@@ -82,7 +86,7 @@ var moveZeroes = function(nums) {
     views: ['array'], events: ['FUNCTION_ENTER', 'CONDITION_TRUE', 'CONDITION_FALSE'], eventsBy: { javascript: ['ARRAY_SWAP'] },
   },
   {
-    id: 'container-water', category: 'two pointers', title: '11. Container With Most Water',
+    id: 'container-water', category: 'two pointers', title: 'Container With Most Water',
     java: `class Solution {
     public int maxArea(int[] height) {
         int left = 0, right = height.length - 1, best = 0;
@@ -109,7 +113,7 @@ var moveZeroes = function(nums) {
     views: ['array'], events: ['ARRAY_READ', 'VARIABLE_UPDATE', 'LOOP_ITERATION'],
   },
   {
-    id: 'product-except-self', category: 'prefix sums', title: '238. Product of Array Except Self (one-line loops)',
+    id: 'product-except-self', category: 'prefix sums', title: 'Product of Array Except Self (one-line loops)',
     java: `class Solution {
     public int[] productExceptSelf(int[] nums) {
         int n = nums.length;
@@ -139,7 +143,7 @@ var moveZeroes = function(nums) {
     views: ['array'], events: ['ARRAY_WRITE', 'OBJECT_CREATE'],
   },
   {
-    id: 'subarray-sum-k', category: 'hashing', title: '560. Subarray Sum Equals K',
+    id: 'subarray-sum-k', category: 'hashing', title: 'Subarray Sum Equals K',
     java: `class Solution {
     public int subarraySum(int[] nums, int k) {
         Map<Integer, Integer> count = new HashMap<>();
@@ -167,7 +171,7 @@ var moveZeroes = function(nums) {
     views: ['array', 'map'], events: ['MAP_PUT', 'MAP_GET'],
   },
   {
-    id: 'group-anagrams', category: 'hashing', title: '49. Group Anagrams (lambdas, map of lists)',
+    id: 'group-anagrams', category: 'hashing', title: 'Group Anagrams (lambdas, map of lists)',
     java: `class Solution {
     public List<List<String>> groupAnagrams(String[] strs) {
         Map<String, List<String>> groups = new HashMap<>();
@@ -193,7 +197,7 @@ var moveZeroes = function(nums) {
     views: ['array', 'map'], events: ['MAP_PUT'], eventsBy: { java: ['FUNCTION_ENTER'] },
   },
   {
-    id: 'longest-consecutive', category: 'hashing', title: '128. Longest Consecutive Sequence (set)',
+    id: 'longest-consecutive', category: 'hashing', title: 'Longest Consecutive Sequence (set)',
     java: `class Solution {
     public int longestConsecutive(int[] nums) {
         Set<Integer> set = new HashSet<>();
@@ -227,7 +231,7 @@ var moveZeroes = function(nums) {
 
   // ============================================================================ strings & sliding window
   {
-    id: 'longest-substring', category: 'sliding window', title: '3. Longest Substring Without Repeating Characters',
+    id: 'longest-substring', category: 'sliding window', title: 'Longest Substring Without Repeating Characters',
     java: `class Solution {
     public int lengthOfLongestSubstring(String s) {
         Map<Character, Integer> last = new HashMap<>();
@@ -260,7 +264,7 @@ var moveZeroes = function(nums) {
     views: ['map'], events: ['MAP_PUT', 'MAP_GET'],
   },
   {
-    id: 'valid-anagram', category: 'strings', title: '242. Valid Anagram (counting array)',
+    id: 'valid-anagram', category: 'strings', title: 'Valid Anagram (counting array)',
     java: `class Solution {
     public boolean isAnagram(String s, String t) {
         if (s.length() != t.length()) return false;
@@ -288,7 +292,7 @@ var moveZeroes = function(nums) {
     views: ['array'], events: ['ARRAY_WRITE'],
   },
   {
-    id: 'longest-palindrome', category: 'strings', title: '5. Longest Palindromic Substring (expand around center)',
+    id: 'longest-palindrome', category: 'strings', title: 'Longest Palindromic Substring (expand around center)',
     java: `class Solution {
     public String longestPalindrome(String s) {
         int start = 0, end = 0;
@@ -328,12 +332,12 @@ var moveZeroes = function(nums) {
     }
     return s.substring(start, end + 1);
 };`,
-    // "bab" is equally valid on LeetCode; this algorithm keeps the later of equal-length palindromes
+    // "bab" is an equally valid answer; this algorithm keeps the later of equal-length palindromes
     tests: [{ input: 's = "babad"', expected: 'aba' }, { input: 's = "cbbd"', expected: 'bb' }],
     events: ['FUNCTION_ENTER', 'RETURN', 'VARIABLE_UPDATE'],
   },
   {
-    id: 'reverse-string', category: 'strings', title: '344. Reverse String (char[] in-place)',
+    id: 'reverse-string', category: 'strings', title: 'Reverse String (char[] in-place)',
     java: `class Solution {
     public void reverseString(char[] s) {
         int i = 0, j = s.length - 1;
@@ -358,7 +362,7 @@ var moveZeroes = function(nums) {
 
   // ============================================================================ stacks & queues
   {
-    id: 'daily-temperatures', category: 'monotonic stack', title: '739. Daily Temperatures (deque as stack)',
+    id: 'daily-temperatures', category: 'monotonic stack', title: 'Daily Temperatures (deque as stack)',
     java: `class Solution {
     public int[] dailyTemperatures(int[] temperatures) {
         int n = temperatures.length;
@@ -390,7 +394,7 @@ var moveZeroes = function(nums) {
     views: ['array'], viewsBy: { java: ['stack'] }, eventsBy: { java: ['STACK_PUSH', 'STACK_POP', 'MAP_GET'] },
   },
   {
-    id: 'eval-rpn', category: 'stack', title: '150. Evaluate Reverse Polish Notation (switch on strings)',
+    id: 'eval-rpn', category: 'stack', title: 'Evaluate Reverse Polish Notation (switch on strings)',
     java: `class Solution {
     public int evalRPN(String[] tokens) {
         Stack<Integer> stack = new Stack<>();
@@ -429,7 +433,7 @@ var moveZeroes = function(nums) {
     viewsBy: { java: ['stack', 'array'], javascript: ['array'] }, eventsBy: { java: ['STACK_PUSH', 'STACK_POP'] },
   },
   {
-    id: 'min-stack', category: 'design', title: '155. Min Stack (class design, raw LeetCode input)',
+    id: 'min-stack', category: 'design', title: 'Min Stack (class design, raw judge input)',
     java: `class MinStack {
     private final Deque<int[]> stack = new ArrayDeque<>();
 
@@ -480,7 +484,7 @@ MinStack.prototype.getMin = function() {
     viewsBy: { java: ['stack'], javascript: ['array'] }, events: ['FUNCTION_ENTER', 'RETURN'], eventsBy: { java: ['STACK_PUSH', 'STACK_POP'] },
   },
   {
-    id: 'lru-cache', category: 'design', title: '146. LRU Cache (hash map + doubly linked list)',
+    id: 'lru-cache', category: 'design', title: 'LRU Cache (hash map + doubly linked list)',
     java: `class LRUCache {
     private static class Node {
         int key, val;
@@ -604,7 +608,7 @@ class LRUCache {
     views: ['linkedlist', 'map'], events: ['MAP_PUT', 'MAP_REMOVE', 'POINTER_UPDATE'],
   },
   {
-    id: 'rotting-oranges', category: 'BFS', title: '994. Rotting Oranges (grid BFS, queue of cells)',
+    id: 'rotting-oranges', category: 'BFS', title: 'Rotting Oranges (grid BFS, queue of cells)',
     java: `class Solution {
     public int orangesRotting(int[][] grid) {
         int rows = grid.length, cols = grid[0].length, fresh = 0;
@@ -670,7 +674,7 @@ class LRUCache {
 
   // ============================================================================ heaps
   {
-    id: 'top-k-frequent', category: 'heap', title: '347. Top K Frequent Elements (PQ with comparator / buckets)',
+    id: 'top-k-frequent', category: 'heap', title: 'Top K Frequent Elements (PQ with comparator / buckets)',
     java: `class Solution {
     public int[] topKFrequent(int[] nums, int k) {
         Map<Integer, Integer> freq = new HashMap<>();
@@ -704,7 +708,7 @@ class LRUCache {
     absentViewsBy: { javascript: ['graph'] },
   },
   {
-    id: 'merge-k-lists', category: 'heap', title: '23. Merge k Sorted Lists (ListNode[] input)',
+    id: 'merge-k-lists', category: 'heap', title: 'Merge k Sorted Lists (ListNode[] input)',
     java: `class Solution {
     public ListNode mergeKLists(ListNode[] lists) {
         PriorityQueue<ListNode> heap = new PriorityQueue<>((a, b) -> a.val - b.val);
@@ -751,7 +755,7 @@ var mergeKLists = function(lists) {
     views: ['linkedlist'], viewsBy: { java: ['pq'] }, events: ['POINTER_UPDATE'],
   },
   {
-    id: 'kth-largest-quickselect', category: 'sorting', title: '215. Kth Largest (quickselect, recursion + swaps)',
+    id: 'kth-largest-quickselect', category: 'sorting', title: 'Kth Largest (quickselect, recursion + swaps)',
     java: `class Solution {
     public int findKthLargest(int[] nums, int k) {
         return select(nums, 0, nums.length - 1, nums.length - k);
@@ -792,7 +796,7 @@ var mergeKLists = function(lists) {
 
   // ============================================================================ linked lists
   {
-    id: 'merge-two-lists', category: 'linked list', title: '21. Merge Two Sorted Lists (dummy node, empty lists)',
+    id: 'merge-two-lists', category: 'linked list', title: 'Merge Two Sorted Lists (dummy node, empty lists)',
     java: `class Solution {
     public ListNode mergeTwoLists(ListNode list1, ListNode list2) {
         ListNode dummy = new ListNode(0);
@@ -836,7 +840,7 @@ var mergeTwoLists = function(list1, list2) {
     views: ['linkedlist'], events: ['POINTER_UPDATE'],
   },
   {
-    id: 'remove-nth', category: 'linked list', title: '19. Remove Nth Node From End (fast/slow)',
+    id: 'remove-nth', category: 'linked list', title: 'Remove Nth Node From End (fast/slow)',
     java: `class Solution {
     public ListNode removeNthFromEnd(ListNode head, int n) {
         ListNode dummy = new ListNode(0, head);
@@ -870,7 +874,7 @@ var removeNthFromEnd = function(head, n) {
     views: ['linkedlist'], events: ['POINTER_UPDATE'],
   },
   {
-    id: 'linked-list-cycle', category: 'linked list', title: '141. Linked List Cycle (pos input, cyclic heap)',
+    id: 'linked-list-cycle', category: 'linked list', title: 'Linked List Cycle (pos input, cyclic heap)',
     java: `class Solution {
     public boolean hasCycle(ListNode head) {
         ListNode slow = head, fast = head;
@@ -899,7 +903,7 @@ var hasCycle = function(head) {
     views: ['linkedlist'], events: ['POINTER_UPDATE'],
   },
   {
-    id: 'add-two-numbers', category: 'linked list', title: '2. Add Two Numbers',
+    id: 'add-two-numbers', category: 'linked list', title: 'Add Two Numbers',
     java: `class Solution {
     public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
         ListNode dummy = new ListNode(0), tail = dummy;
@@ -937,7 +941,7 @@ var addTwoNumbers = function(l1, l2) {
     views: ['linkedlist'], events: ['OBJECT_CREATE', 'POINTER_UPDATE'],
   },
   {
-    id: 'palindrome-list', category: 'linked list', title: '234. Palindrome Linked List (reverse half)',
+    id: 'palindrome-list', category: 'linked list', title: 'Palindrome Linked List (reverse half)',
     java: `class Solution {
     public boolean isPalindrome(ListNode head) {
         ListNode slow = head, fast = head;
@@ -990,7 +994,7 @@ var isPalindrome = function(head) {
 
   // ============================================================================ trees
   {
-    id: 'max-depth', category: 'tree DFS', title: '104. Maximum Depth of Binary Tree (recursion)',
+    id: 'max-depth', category: 'tree DFS', title: 'Maximum Depth of Binary Tree (recursion)',
     java: `class Solution {
     public int maxDepth(TreeNode root) {
         if (root == null) return 0;
@@ -1013,7 +1017,7 @@ var maxDepth = function(root) {
     views: ['tree'], events: ['FUNCTION_ENTER', 'RETURN'], recursive: true,
   },
   {
-    id: 'invert-tree', category: 'tree DFS', title: '226. Invert Binary Tree (returns a tree)',
+    id: 'invert-tree', category: 'tree DFS', title: 'Invert Binary Tree (returns a tree)',
     java: `class Solution {
     public TreeNode invertTree(TreeNode root) {
         if (root == null) return null;
@@ -1036,7 +1040,7 @@ var invertTree = function(root) {
     views: ['tree'], events: ['POINTER_UPDATE'], recursive: true,
   },
   {
-    id: 'validate-bst', category: 'tree DFS', title: '98. Validate BST (long / Infinity bounds)',
+    id: 'validate-bst', category: 'tree DFS', title: 'Validate BST (long / Infinity bounds)',
     java: `class Solution {
     public boolean isValidBST(TreeNode root) {
         return valid(root, Long.MIN_VALUE, Long.MAX_VALUE);
@@ -1064,7 +1068,7 @@ var isValidBST = function(root) {
     views: ['tree'], events: ['FUNCTION_ENTER'], recursive: true,
   },
   {
-    id: 'lca', category: 'tree DFS', title: '236. Lowest Common Ancestor (node parameters by value)',
+    id: 'lca', category: 'tree DFS', title: 'Lowest Common Ancestor (node parameters by value)',
     java: `class Solution {
     public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
         if (root == null || root == p || root == q) return root;
@@ -1094,7 +1098,7 @@ var lowestCommonAncestor = function(root, p, q) {
     views: ['tree'], recursive: true,
   },
   {
-    id: 'kth-smallest-bst', category: 'tree iterative', title: '230. Kth Smallest in BST (iterative inorder, stack of nodes)',
+    id: 'kth-smallest-bst', category: 'tree iterative', title: 'Kth Smallest in BST (iterative inorder, stack of nodes)',
     java: `class Solution {
     public int kthSmallest(TreeNode root, int k) {
         Deque<TreeNode> stack = new ArrayDeque<>();
@@ -1134,7 +1138,7 @@ var kthSmallest = function(root, k) {
     views: ['tree'], viewsBy: { java: ['stack'] }, eventsBy: { java: ['STACK_PUSH', 'STACK_POP'] },
   },
   {
-    id: 'diameter', category: 'tree DFS', title: '543. Diameter of Binary Tree (instance field state)',
+    id: 'diameter', category: 'tree DFS', title: 'Diameter of Binary Tree (instance field state)',
     java: `class Solution {
     private int best = 0;
 
@@ -1169,7 +1173,7 @@ var diameterOfBinaryTree = function(root) {
     views: ['tree'], recursive: true,
   },
   {
-    id: 'path-sum-ii', category: 'backtracking', title: '113. Path Sum II (backtracking path list)',
+    id: 'path-sum-ii', category: 'backtracking', title: 'Path Sum II (backtracking path list)',
     java: `class Solution {
     public List<List<Integer>> pathSum(TreeNode root, int targetSum) {
         List<List<Integer>> result = new ArrayList<>();
@@ -1215,7 +1219,7 @@ var pathSum = function(root, targetSum) {
     views: ['tree', 'array'], events: ['ARRAY_WRITE'], recursive: true,
   },
   {
-    id: 'bst-insert', category: 'tree', title: '701. Insert into a BST',
+    id: 'bst-insert', category: 'tree', title: 'Insert into a BST',
     java: `class Solution {
     public TreeNode insertIntoBST(TreeNode root, int val) {
         if (root == null) return new TreeNode(val);
@@ -1255,7 +1259,7 @@ var insertIntoBST = function(root, val) {
     views: ['tree'], events: ['POINTER_UPDATE', 'OBJECT_CREATE'],
   },
   {
-    id: 'right-side-view', category: 'tree BFS', title: '199. Binary Tree Right Side View',
+    id: 'right-side-view', category: 'tree BFS', title: 'Binary Tree Right Side View',
     java: `class Solution {
     public List<Integer> rightSideView(TreeNode root) {
         List<Integer> result = new ArrayList<>();
@@ -1299,7 +1303,7 @@ var rightSideView = function(root) {
 
   // ============================================================================ graphs
   {
-    id: 'course-schedule', category: 'graph', title: "207. Course Schedule (Kahn's topological sort)",
+    id: 'course-schedule', category: 'graph', title: "Course Schedule (Kahn's topological sort)",
     java: `class Solution {
     public boolean canFinish(int numCourses, int[][] prerequisites) {
         List<List<Integer>> graph = new ArrayList<>();
@@ -1353,7 +1357,7 @@ var rightSideView = function(root) {
     views: ['graph', 'array'], viewsBy: { java: ['queue'] }, eventsBy: { java: ['QUEUE_PUSH', 'QUEUE_POP'] },
   },
   {
-    id: 'network-delay', category: 'graph', title: "743. Network Delay Time (Dijkstra)",
+    id: 'network-delay', category: 'graph', title: "Network Delay Time (Dijkstra)",
     java: `class Solution {
     public int networkDelayTime(int[][] times, int n, int k) {
         Map<Integer, List<int[]>> graph = new HashMap<>();
@@ -1406,7 +1410,7 @@ var rightSideView = function(root) {
     views: ['array'], viewsBy: { java: ['pq', 'map'] }, events: ['ARRAY_WRITE'],
   },
   {
-    id: 'provinces', category: 'union find', title: '547. Number of Provinces (union-find, path compression)',
+    id: 'provinces', category: 'union find', title: 'Number of Provinces (union-find, path compression)',
     java: `class Solution {
     private int[] parent;
 
@@ -1460,7 +1464,7 @@ var rightSideView = function(root) {
     views: ['matrix', 'array'], events: ['ARRAY_WRITE'], absentViews: ['graph'],
   },
   {
-    id: 'keys-rooms', category: 'graph', title: '841. Keys and Rooms (DFS with explicit stack)',
+    id: 'keys-rooms', category: 'graph', title: 'Keys and Rooms (DFS with explicit stack)',
     java: `class Solution {
     public boolean canVisitAllRooms(List<List<Integer>> rooms) {
         boolean[] seen = new boolean[rooms.size()];
@@ -1501,7 +1505,7 @@ var rightSideView = function(root) {
 
   // ============================================================================ dynamic programming
   {
-    id: 'climbing-stairs', category: 'DP 1D', title: '70. Climbing Stairs',
+    id: 'climbing-stairs', category: 'DP 1D', title: 'Climbing Stairs',
     java: `class Solution {
     public int climbStairs(int n) {
         if (n <= 2) return n;
@@ -1528,7 +1532,7 @@ var rightSideView = function(root) {
     views: ['array'], events: ['ARRAY_WRITE', 'ARRAY_READ'], dependency: /dp\[\d+\] = \d+ {2}← dp\[\d+\], dp\[\d+\]/,
   },
   {
-    id: 'coin-change', category: 'DP 1D', title: '322. Coin Change (Arrays.fill, sentinel values)',
+    id: 'coin-change', category: 'DP 1D', title: 'Coin Change (Arrays.fill, sentinel values)',
     java: `class Solution {
     public int coinChange(int[] coins, int amount) {
         int[] dp = new int[amount + 1];
@@ -1556,7 +1560,7 @@ var rightSideView = function(root) {
     views: ['array'], events: ['ARRAY_WRITE'],
   },
   {
-    id: 'lis', category: 'DP 1D', title: '300. Longest Increasing Subsequence (O(n²))',
+    id: 'lis', category: 'DP 1D', title: 'Longest Increasing Subsequence (O(n²))',
     java: `class Solution {
     public int lengthOfLIS(int[] nums) {
         int[] dp = new int[nums.length];
@@ -1586,7 +1590,7 @@ var rightSideView = function(root) {
     views: ['array'], events: ['ARRAY_WRITE'],
   },
   {
-    id: 'edit-distance', category: 'DP 2D', title: '72. Edit Distance',
+    id: 'edit-distance', category: 'DP 2D', title: 'Edit Distance',
     java: `class Solution {
     public int minDistance(String word1, String word2) {
         int m = word1.length(), n = word2.length();
@@ -1627,7 +1631,7 @@ var rightSideView = function(root) {
     dependency: /dp\[\d+\]\[\d+\] = \d+ {2}← dp\[\d+\]\[\d+\], dp\[\d+\]\[\d+\], dp\[\d+\]\[\d+\]/,
   },
   {
-    id: 'unique-paths', category: 'DP 2D', title: '62. Unique Paths',
+    id: 'unique-paths', category: 'DP 2D', title: 'Unique Paths',
     java: `class Solution {
     public int uniquePaths(int m, int n) {
         int[][] dp = new int[m][n];
@@ -1654,7 +1658,17 @@ var rightSideView = function(root) {
     views: ['matrix'], events: ['ARRAY_WRITE'],
   },
   {
-    id: 'house-robber', category: 'DP 1D', title: '198. House Robber (rolling variables)',
+    // the built-in example: memoized interval DP whose table is allocated far bigger than it is used; the dependency
+    // caption has to come from the sub-problem calls (the cell's own line reads no other cell of the table)
+    id: 'min-cost-cut', category: 'DP 2D', title: 'Minimum Cost to Cut a Stick (memoized recursion, oversized table)',
+    java: MIN_COST_CUT.java,
+    javascript: MIN_COST_CUT.javascript,
+    tests: [{ input: 'n = 7, cuts = [1,3,4,5]', expected: 16 }, { input: 'n = 9, cuts = [5,6,1,4,2]', expected: 22 }],
+    views: ['matrix'], events: ['ARRAY_WRITE'], recursive: true,
+    dependency: /dp\[\d+\]\[\d+\] = \d+ {2}← (this\.)?dp\[\d+\]\[\d+\], (this\.)?dp\[\d+\]\[\d+\]/,
+  },
+  {
+    id: 'house-robber', category: 'DP 1D', title: 'House Robber (rolling variables)',
     java: `class Solution {
     public int rob(int[] nums) {
         int prev = 0, cur = 0;
@@ -1677,7 +1691,7 @@ var rightSideView = function(root) {
     views: ['array'], events: ['VARIABLE_UPDATE'],
   },
   {
-    id: 'word-break', category: 'DP 1D', title: '139. Word Break (boolean dp + set of strings)',
+    id: 'word-break', category: 'DP 1D', title: 'Word Break (boolean dp + set of strings)',
     java: `class Solution {
     public boolean wordBreak(String s, List<String> wordDict) {
         Set<String> words = new HashSet<>(wordDict);
@@ -1708,11 +1722,11 @@ var rightSideView = function(root) {
     }
     return dp[s.length];
 };`,
-    tests: [{ input: 's = "leetcode", wordDict = ["leet","code"]', expected: true }, { input: 's = "catsandog", wordDict = ["cats","dog","sand","and","cat"]', expected: false }],
+    tests: [{ input: 's = "codeengine", wordDict = ["code","engine"]', expected: true }, { input: 's = "catsandog", wordDict = ["cats","dog","sand","and","cat"]', expected: false }],
     views: ['array', 'set'], events: ['ARRAY_WRITE'],
   },
   {
-    id: 'partition-subset', category: 'DP knapsack', title: '416. Partition Equal Subset Sum (0/1 knapsack)',
+    id: 'partition-subset', category: 'DP knapsack', title: 'Partition Equal Subset Sum (0/1 knapsack)',
     java: `class Solution {
     public boolean canPartition(int[] nums) {
         int total = 0;
@@ -1746,7 +1760,7 @@ var rightSideView = function(root) {
     views: ['array'], events: ['ARRAY_WRITE'],
   },
   {
-    id: 'fib-memo', category: 'memoization', title: '509. Fibonacci with memo (field map / global map)',
+    id: 'fib-memo', category: 'memoization', title: 'Fibonacci with memo (field map / global map)',
     java: `class Solution {
     private final Map<Integer, Integer> memo = new HashMap<>();
 
@@ -1773,7 +1787,7 @@ var fib = function(n) {
 
   // ============================================================================ backtracking
   {
-    id: 'subsets', category: 'backtracking', title: '78. Subsets',
+    id: 'subsets', category: 'backtracking', title: 'Subsets',
     java: `class Solution {
     public List<List<Integer>> subsets(int[] nums) {
         List<List<Integer>> result = new ArrayList<>();
@@ -1808,7 +1822,7 @@ var fib = function(n) {
     views: ['array'], events: ['FUNCTION_ENTER', 'RETURN'], recursive: true,
   },
   {
-    id: 'permutations', category: 'backtracking', title: '46. Permutations (used[] flags)',
+    id: 'permutations', category: 'backtracking', title: 'Permutations (used[] flags)',
     java: `class Solution {
     public List<List<Integer>> permute(int[] nums) {
         List<List<Integer>> result = new ArrayList<>();
@@ -1857,7 +1871,7 @@ var fib = function(n) {
     views: ['array'], events: ['ARRAY_WRITE'], recursive: true,
   },
   {
-    id: 'generate-parentheses', category: 'backtracking', title: '22. Generate Parentheses (StringBuilder)',
+    id: 'generate-parentheses', category: 'backtracking', title: 'Generate Parentheses (StringBuilder)',
     java: `class Solution {
     public List<String> generateParenthesis(int n) {
         List<String> result = new ArrayList<>();
@@ -1899,7 +1913,7 @@ var fib = function(n) {
     views: ['array'], events: ['FUNCTION_ENTER'], eventsBy: { java: ['ARRAY_WRITE'] }, recursive: true,
   },
   {
-    id: 'n-queens', category: 'backtracking', title: '51. N-Queens (char board)',
+    id: 'n-queens', category: 'backtracking', title: 'N-Queens (char board)',
     java: `class Solution {
     public List<List<String>> solveNQueens(int n) {
         char[][] board = new char[n][n];
@@ -1969,7 +1983,7 @@ var fib = function(n) {
     views: ['matrix'], events: ['ARRAY_WRITE'], recursive: true,
   },
   {
-    id: 'combination-sum', category: 'backtracking', title: '39. Combination Sum',
+    id: 'combination-sum', category: 'backtracking', title: 'Combination Sum',
     java: `class Solution {
     public List<List<Integer>> combinationSum(int[] candidates, int target) {
         List<List<Integer>> result = new ArrayList<>();
@@ -2014,7 +2028,7 @@ var fib = function(n) {
 
   // ============================================================================ bits & math
   {
-    id: 'single-number', category: 'bit manipulation', title: '136. Single Number (XOR)',
+    id: 'single-number', category: 'bit manipulation', title: 'Single Number (XOR)',
     java: `class Solution {
     public int singleNumber(int[] nums) {
         int x = 0;
@@ -2031,7 +2045,7 @@ var fib = function(n) {
     views: ['array'], events: ['VARIABLE_UPDATE'], minFrames: 6,
   },
   {
-    id: 'counting-bits', category: 'bit manipulation', title: '338. Counting Bits (shifts)',
+    id: 'counting-bits', category: 'bit manipulation', title: 'Counting Bits (shifts)',
     java: `class Solution {
     public int[] countBits(int n) {
         int[] bits = new int[n + 1];
@@ -2048,7 +2062,7 @@ var fib = function(n) {
     views: ['array'], events: ['ARRAY_WRITE', 'ARRAY_READ'],
   },
   {
-    id: 'reverse-integer', category: 'math', title: '7. Reverse Integer (overflow via long)',
+    id: 'reverse-integer', category: 'math', title: 'Reverse Integer (overflow via long)',
     java: `class Solution {
     public int reverse(int x) {
         long result = 0;
@@ -2073,7 +2087,7 @@ var fib = function(n) {
     events: ['VARIABLE_UPDATE'],
   },
   {
-    id: 'roman-to-int', category: 'hashing', title: '13. Roman to Integer (Map.of / object map)',
+    id: 'roman-to-int', category: 'hashing', title: 'Roman to Integer (Map.of / object map)',
     java: `class Solution {
     public int romanToInt(String s) {
         Map<Character, Integer> value = Map.of('I', 1, 'V', 5, 'X', 10, 'L', 50, 'C', 100, 'D', 500, 'M', 1000);
@@ -2100,7 +2114,7 @@ var fib = function(n) {
     views: ['map'],
   },
   {
-    id: 'pow', category: 'math', title: '50. Pow(x, n) (doubles, fast exponentiation)',
+    id: 'pow', category: 'math', title: 'Pow(x, n) (doubles, fast exponentiation)',
     java: `class Solution {
     public double myPow(double x, int n) {
         long N = n;

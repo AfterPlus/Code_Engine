@@ -15,6 +15,7 @@ import { ProblemPanel } from './components/ProblemPanel.js';
 import { TestCasePanel, parseTestInput, parseExpected, sameOutput } from './components/TestCasePanel.js';
 import { TimelineControls } from './components/TimelineControls.js';
 import { VisualizationPanel } from './components/VisualizationPanel.js';
+import { bindSplitter } from './components/Splitter.js';
 import { STATUS_TEXT } from './components/ConsolePanel.js';
 
 const STORE_KEY = 'lcv:v1';
@@ -54,11 +55,13 @@ function freshState() {
     overrides: {},
     settings: { theme: 'system', maxSteps: 3000, backend: '' },
     leftWidth: null,
+    sizes: {}, // panel sizes in px the user dragged: dock, problem, tests (absent = default)
   };
 }
 
 const state = { ...freshState(), ...storage.get(STORE_KEY, {}) };
 state.settings = { ...freshState().settings, ...(state.settings || {}) };
+state.sizes = state.sizes || {};
 // state saved before a language existed: fill the gaps from the current example
 {
   const base = sampleById(state.sampleId) || SAMPLES[0];
@@ -187,7 +190,7 @@ function showTab(tab) {
 }
 tabButtons.forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
 
-/** Definition bar: suggests classes the solution uses but nothing declares, and inserts LeetCode's presets. */
+/** Definition bar: suggests classes the solution uses but nothing declares, and inserts the standard helper-class presets. */
 function renderDefsUi() {
   const lang = state.language;
   const defs = editor.getValue('defs');
@@ -204,14 +207,14 @@ function renderDefsUi() {
   const items = [];
   if (!onDefs) {
     const names = [...new Set(missing.map((id) => PRESET_INFO[id].className))].join(', ');
-    items.push(h('span', { class: 'grow' }, `Uses ${names}, which LeetCode defines for you. `),
+    items.push(h('span', { class: 'grow' }, `Uses ${names}, which online judges normally provide. `),
       h('button', { type: 'button', class: 'btn btn-sm', onclick: () => { missing.forEach(insert); showTab('defs'); } }, 'Add to Definitions'));
   } else {
-    const select = h('select', { 'aria-label': 'Insert a LeetCode definition' },
+    const select = h('select', { 'aria-label': 'Insert a helper-class definition' },
       h('option', { value: '' }, 'Insert definition…'),
       ...Object.entries(PRESET_INFO).filter(([id]) => presetCode(lang, id)).map(([id, info]) => h('option', { value: id }, info.label)));
     select.addEventListener('change', () => { if (select.value) insert(select.value); select.value = ''; });
-    items.push(h('span', { class: 'grow' }, 'Classes LeetCode defines for you. They run before your solution and are not traced.'), select);
+    items.push(h('span', { class: 'grow' }, 'Helper classes online judges normally provide. They run before your solution and are not traced.'), select);
   }
   mount(bar, items);
 }
@@ -246,26 +249,80 @@ $('set-backend').placeholder = globalThis.CODE_ENGINE_CONFIG?.backend || 'same o
 $('set-backend').addEventListener('change', (e) => { state.settings.backend = e.target.value.trim(); save(); });
 window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { editor.refreshTheme(); renderFrame(); });
 
-// resizable split
-const splitter = $('splitter');
-if (state.leftWidth) document.documentElement.style.setProperty('--left-width', state.leftWidth);
-splitter.addEventListener('pointerdown', (e) => {
-  splitter.setPointerCapture(e.pointerId);
-  splitter.classList.add('dragging');
-  const ws = $('workspace').getBoundingClientRect();
-  const move = (ev) => {
-    const pct = Math.max(25, Math.min(70, ((ev.clientX - ws.left) / ws.width) * 100));
-    state.leftWidth = pct.toFixed(1) + '%';
-    document.documentElement.style.setProperty('--left-width', state.leftWidth);
-  };
-  const up = () => {
-    splitter.classList.remove('dragging');
-    splitter.removeEventListener('pointermove', move);
-    splitter.removeEventListener('pointerup', up);
-    save();
-  };
-  splitter.addEventListener('pointermove', move);
-  splitter.addEventListener('pointerup', up);
+// ------------------------------------------------------------------------------------------ resizable panels
+// Every divider uses the same handle (drag, arrow keys, double-click to reset). The sizes are CSS variables, so a
+// panel with no saved size keeps its stylesheet default, and they are remembered between visits.
+
+const root = document.documentElement;
+const SIZE_VARS = { dock: '--dock-height', problem: '--problem-height', tests: '--tests-height' };
+const EDITOR_MIN = 220; // what the editor keeps when a neighbour grows
+const STAGE_MIN = 140;
+const DOCK_MIN = 120;
+const PROBLEM_MIN = 56;
+const TESTS_MIN = 96;
+const heightOf = (el) => el.getBoundingClientRect().height;
+const editorCard = document.querySelector('.editor-card');
+/** How far the editor can still shrink: what a growing neighbour may take. */
+const editorSlack = () => Math.max(0, heightOf(editorCard) - EDITOR_MIN);
+
+function setSize(key, px) {
+  if (px === null) {
+    delete state.sizes[key];
+    root.style.removeProperty(SIZE_VARS[key]);
+  } else {
+    state.sizes[key] = px;
+    root.style.setProperty(SIZE_VARS[key], `${px}px`);
+  }
+  $('tests').classList.toggle('sized', state.sizes.tests != null);
+}
+for (const key of Object.keys(SIZE_VARS)) if (state.sizes[key] != null) setSize(key, state.sizes[key]);
+if (state.leftWidth) root.style.setProperty('--left-width', state.leftWidth);
+
+/** Width of the area the two columns share, which is what --left-width is a percentage of. */
+function workspaceWidth() {
+  const ws = $('workspace');
+  const cs = getComputedStyle(ws);
+  return ws.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+}
+
+// left | right
+bindSplitter($('splitter'), {
+  axis: 'x', grow: 1,
+  size: () => $('left').getBoundingClientRect().width,
+  limits: () => [workspaceWidth() * 0.25, workspaceWidth() * 0.7],
+  apply: (px) => {
+    state.leftWidth = `${((px / workspaceWidth()) * 100).toFixed(1)}%`;
+    root.style.setProperty('--left-width', state.leftWidth);
+  },
+  reset: () => { state.leftWidth = null; root.style.removeProperty('--left-width'); },
+  done: save,
+});
+// visualization above, Variables / Call Stack / Call Tree / Memory / Console below
+bindSplitter($('splitter-dock'), {
+  axis: 'y', grow: -1,
+  size: () => heightOf($('dock')),
+  limits: () => [DOCK_MIN, heightOf($('dock')) + Math.max(0, heightOf($('stage')) - STAGE_MIN)],
+  apply: (px) => setSize('dock', px),
+  reset: () => setSize('dock', null),
+  done: save,
+});
+// problem statement above the editor (and its Solution / Definitions tabs)
+bindSplitter($('splitter-problem'), {
+  axis: 'y', grow: 1,
+  size: () => heightOf($('problem')),
+  limits: () => [PROBLEM_MIN, heightOf($('problem')) + editorSlack()],
+  apply: (px) => setSize('problem', px),
+  reset: () => setSize('problem', null),
+  done: save,
+});
+// test cases below the editor
+bindSplitter($('splitter-tests'), {
+  axis: 'y', grow: -1,
+  size: () => heightOf($('tests')),
+  limits: () => [TESTS_MIN, heightOf($('tests')) + editorSlack()],
+  apply: (px) => setSize('tests', px),
+  reset: () => setSize('tests', null),
+  done: save,
 });
 
 // ------------------------------------------------------------------------------------------ running

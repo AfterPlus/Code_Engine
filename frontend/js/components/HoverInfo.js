@@ -217,7 +217,7 @@ function listText(head, info, ctx) {
   return parts.join(' → ');
 }
 
-/** A binary tree as LeetCode's level-order list: [3, 9, 20, null, null, 15, 7]. */
+/** A binary tree as the usual level-order list: [3, 9, 20, null, null, 15, 7]. */
 function treeText(root, info, ctx) {
   const out = [];
   const q = [root];
