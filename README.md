@@ -73,6 +73,11 @@ The frontend is plain static files, so it can be hosted on its own; only Java ne
 `frontend/_headers` sets security headers on Pages. A user can still point the app at a different backend under
 ⚙ Settings; that overrides `config.js`.
 
+### Deploying the Java backend
+
+[deploy/backend](deploy/backend/README.md) runs the backend in Docker on an Oracle Cloud free VM behind Cloudflare,
+with no network for the server or the child JVMs it spawns. The guide covers the VM, the certificate, DNS and updates.
+
 ## Using it
 
 - **Examples ▾** loads eleven problems in the spec's milestone order (Pair With a Given Sum, Fibonacci, Binary Search,
@@ -220,7 +225,8 @@ What this does **not** give you: OS-level isolation. Modern JDKs no longer ship 
 filesystem and network restrictions come from the bytecode policy rather than the kernel. That's fine for
 running it on your own machine, but **before exposing it to other users**, run the backend (or just its child
 JVMs) in a container with no network, a read-only root filesystem, and cgroup CPU/memory/pid limits (for
-example `docker run --network none --read-only --pids-limit 64 --memory 512m …`).
+example `docker run --network none --read-only --pids-limit 64 --memory 512m …`). `deploy/backend` does this:
+see [its README](deploy/backend/README.md).
 
 JavaScript runs in the visitor's own browser, in a Web Worker with network APIs removed, so it can't reach
 the server at all.

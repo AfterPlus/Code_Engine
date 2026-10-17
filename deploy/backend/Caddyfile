@@ -1,0 +1,30 @@
+# Reverse proxy for the Java backend. Meant to sit behind Cloudflare (proxied DNS record, SSL mode "Full (strict)"):
+# the certificate is a Cloudflare Origin CA certificate, which only Cloudflare trusts, so nothing renews and the
+# origin can't be used directly by browsers.
+{
+	admin off
+}
+
+{$API_DOMAIN}:443 {
+	tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+
+	# Code is capped at 50 000 characters server-side; this just stops oversized bodies early.
+	request_body {
+		max_size 512KB
+	}
+
+	# Only the API. The jar also serves a copy of the frontend, but the site itself lives on Cloudflare Pages.
+	handle /api/* {
+		reverse_proxy unix//run/codeengine/api.sock
+	}
+	handle {
+		respond 404
+	}
+
+	encode zstd gzip
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+	}
+}

@@ -1,0 +1,6 @@
+.git
+.claude
+**/target
+frontend/tests
+deploy/backend/certs
+deploy/backend/.env
